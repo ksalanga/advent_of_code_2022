@@ -20,5 +20,8 @@ fn main() {
         elves_total_calories.push(elf_total_calories);
     });
 
-    assert_eq!(elves_total_calories.pop().unwrap_or(0), 24000);
+    println!(
+        "Highest Calories: {}",
+        elves_total_calories.pop().unwrap_or(0)
+    );
 }
