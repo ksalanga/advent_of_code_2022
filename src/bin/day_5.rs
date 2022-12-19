@@ -59,14 +59,13 @@ impl Stacks {
         crates.for_each(|crates| {
             crates
                 .chars()
-                .skip(1) // Skip first Index which is either a beginning of crate: [ or empty. Next value will be supplies if crate or empty if empty.
+                .skip(1) // Skip first index of characters in OG String which is either a beginning of crate: [ or empty. Next iterated value will be supplies if crate or empty if empty.
                 .enumerate() // Enumerate the Characters starting index @ 0 from the first possible supplies.
                 .filter(|(i, supplies)| supplies.is_alphabetic() && i % 4 == 0) // Filter only possible supplies.
                 // Starting from an index where supplies possibly are, the next supplies character will be 4 indices ahead.
                 // ex: [S1] [S2] S1 to S2 is index 0 (starting from first possible supply) to index 4.
-                .map(|(i, supplies)| (i / 4, supplies)) // The current indices in the enumeration are based on the OG string indices.
-                // We have to map these indices to their designated stacks indices.
-                // Since supplies go in stacks left to right, and the String index for a supply is % 4, the mapped designated stacks index is just i / 4.
+                .map(|(i, supplies)| (i / 4, supplies)) // Map OG String Indices to Designated Stacks Indices
+                // Since supplies go in stacks left to right, the Character enumeration index for a supply is % 4, and the String supplies index is 4x the designated stack index, the mapped designated stacks index is just i / 4.
                 .for_each(|(i, supplies)| stacks[i].push(supplies));
         });
 
