@@ -6,19 +6,19 @@ fn main() {
     let cargo_crane_components: Vec<&str> = cargo_crane.split("\n\r\n").collect();
     // Cargo Crane has access to Stacks of Crates
 
-    let stacks: Stacks<char> = Stacks::new(cargo_crane_components[0]);
+    let stacks: Stacks = Stacks::new(cargo_crane_components[0]);
 
     assert_eq!(stacks.count, 3);
 
     // Cargo Crane has access to rearrangement procedure
 }
 
-struct Stacks<T> {
+struct Stacks {
     count: i32,
-    stacks: Vec<Stack<T>>,
+    stacks: Vec<Stack<char>>,
 }
 
-impl<T> Stacks<T> {
+impl Stacks {
     // Parse the original stacks string input:
     // Ex:
     //     [D]
@@ -36,31 +36,36 @@ impl<T> Stacks<T> {
             .try_into()
             .unwrap();
 
+        let crates = stacks;
+
         Stacks {
             count,
-            stacks: Self::place_crates_on_stacks(stacks, count),
+            stacks: Self::place_on_stacks(crates, count),
         }
     }
 
-    fn place_crates_on_stacks<'a>(
-        stacks: impl Iterator<Item = &'a str>,
-        count: i32,
-    ) -> Vec<Stack<T>> {
+    fn place_on_stacks<'a>(crates: impl Iterator<Item = &'a str>, count: i32) -> Vec<Stack<char>> {
         // Getting Supplies in the Crates of the Stacks
 
+        let mut stacks: Vec<Stack<char>> = Vec::with_capacity(count.try_into().unwrap());
         // Parsing Each row of string crates to place into stacks
 
-        stacks.for_each(|crates| {
-            let mut supplies = crates.chars().skip(1);
-
-            for i in 0..count {
-                let supply = supplies.next().unwrap();
-                supplies.skip(3);
-                println!("Supply: {}", supply);
-            }
+        crates.for_each(|crates| {
+            crates
+                .chars()
+                .skip(1)
+                .enumerate()
+                .filter(|(i, _)| i % 4 == 0)
+                .for_each(|(i, supplies)| {
+                    println!("Stack: {}, Supply: {}", i / 4, supplies);
+                    // TODO: Place Supplies / Crate (char) in a Stack @ index i / 4 of Vector<Stack<Char>>
+                    if supplies.is_alphabetic() {
+                        stacks[i / 4].push(supplies);
+                    }
+                });
         });
 
-        Vec::new()
+        stacks
     }
 }
 
