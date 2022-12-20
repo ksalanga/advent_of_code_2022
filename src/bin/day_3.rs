@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fs, str::Chars};
+use std::{collections::HashSet, fs};
 
 fn main() {
     let rucksacks = fs::read_to_string("../../inputs/day_3/example1.txt").unwrap();
