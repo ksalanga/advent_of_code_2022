@@ -8,28 +8,37 @@ fn main() {
     // Cargo Crane has access to Stacks of Crates
     let mut stacks: Stacks = Stacks::new(cargo_crane_components[0]);
 
-    assert_eq!(stacks.count, 3);
-    assert_eq!(stacks.stacks[0].pop(), Some('N'));
-    assert_eq!(stacks.stacks[0].pop(), Some('Z'));
-    assert_eq!(stacks.stacks[1].pop(), Some('D'));
-    assert_eq!(stacks.stacks[1].pop(), Some('C'));
-    assert_eq!(stacks.stacks[1].pop(), Some('M'));
-    assert_eq!(stacks.stacks[2].pop(), Some('P'));
+    // assert_eq!(stacks.count, 3);
+    // assert_eq!(stacks.stacks[0].pop(), Some('N'));
+    // assert_eq!(stacks.stacks[0].pop(), Some('Z'));
+    // assert_eq!(stacks.stacks[1].pop(), Some('D'));
+    // assert_eq!(stacks.stacks[1].pop(), Some('C'));
+    // assert_eq!(stacks.stacks[1].pop(), Some('M'));
+    // assert_eq!(stacks.stacks[2].pop(), Some('P'));
 
     // Cargo Crane has access to rearrangement procedure
     move_crates(cargo_crane_components[1], &mut stacks);
+
+    // let top_of_stacks = String::new();
+
+    assert_eq!(stacks.stacks[0].pop(), Some('C'));
+    assert_eq!(stacks.stacks[1].pop(), Some('M'));
+    assert_eq!(stacks.stacks[2].pop(), Some('Z'));
+
+    println!("CMZ");
 }
 
 fn move_crates(procedure: &str, stacks: &mut Stacks) {
     procedure.lines().for_each(|instructions| {
         let move_instructions = MoveInstructions::new(instructions);
+        Mover::move_crates(move_instructions, stacks);
     })
 }
 
 struct MoveInstructions {
-    amount_of_crates: i32,
-    from_stack: i32,
-    to_stack: i32,
+    amount_of_crates: usize,
+    from_stack_index: usize,
+    to_stack_index: usize,
 }
 
 impl MoveInstructions {
@@ -46,14 +55,32 @@ impl MoveInstructions {
         // third number instance in instructions (could be greater than a single digit) is to stack.
         MoveInstructions {
             amount_of_crates: instructions.next().unwrap().parse().unwrap(),
-            from_stack: instructions.next().unwrap().parse().unwrap(),
-            to_stack: instructions.next().unwrap().parse().unwrap(),
+            from_stack_index: instructions.next().unwrap().parse::<usize>().unwrap() - 1,
+            to_stack_index: instructions.next().unwrap().parse::<usize>().unwrap() - 1,
+        }
+    }
+}
+
+struct Mover();
+
+impl Mover {
+    fn move_crates(instructions: MoveInstructions, stacks: &mut Stacks) {
+        let amount_of_crates = instructions.amount_of_crates;
+        let stacks = &mut stacks.stacks;
+
+        for _ in 0..amount_of_crates {
+            let from_stack = &mut stacks[instructions.from_stack_index];
+
+            let crate_to_move = from_stack.pop().unwrap();
+
+            let to_stack = &mut stacks[instructions.to_stack_index];
+            to_stack.push(crate_to_move);
         }
     }
 }
 
 struct Stacks {
-    count: i32,
+    count: usize,
     stacks: Vec<Stack<char>>,
 }
 
@@ -67,13 +94,7 @@ impl Stacks {
     fn new(stacks: &str) -> Self {
         let mut stacks = stacks.lines().rev();
 
-        let count: i32 = stacks
-            .next()
-            .unwrap()
-            .split_whitespace()
-            .count()
-            .try_into()
-            .unwrap();
+        let count: usize = stacks.next().unwrap().split_whitespace().count();
 
         let crates = stacks;
 
@@ -83,7 +104,10 @@ impl Stacks {
         }
     }
 
-    fn place_on_stacks<'a>(crates: impl Iterator<Item = &'a str>, count: i32) -> Vec<Stack<char>> {
+    fn place_on_stacks<'a>(
+        crates: impl Iterator<Item = &'a str>,
+        count: usize,
+    ) -> Vec<Stack<char>> {
         // Getting Supplies in the Crates of the Stacks
 
         let mut stacks: Vec<Stack<char>> = (0..count).map(|_| Stack::new()).collect();
@@ -110,6 +134,7 @@ struct Stack<T> {
     stack: Vec<T>,
 }
 
+#[allow(dead_code)]
 impl<T> Stack<T> {
     fn new() -> Self {
         Stack { stack: Vec::new() }
