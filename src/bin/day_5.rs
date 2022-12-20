@@ -8,14 +8,6 @@ fn main() {
     // Cargo Crane has access to Stacks of Crates
     let mut stacks: Stacks = Stacks::new(cargo_crane_components[0]);
 
-    // assert_eq!(stacks.count, 3);
-    // assert_eq!(stacks.stacks[0].pop(), Some('N'));
-    // assert_eq!(stacks.stacks[0].pop(), Some('Z'));
-    // assert_eq!(stacks.stacks[1].pop(), Some('D'));
-    // assert_eq!(stacks.stacks[1].pop(), Some('C'));
-    // assert_eq!(stacks.stacks[1].pop(), Some('M'));
-    // assert_eq!(stacks.stacks[2].pop(), Some('P'));
-
     // Cargo Crane has access to rearrangement procedure
     move_crates(cargo_crane_components[1], &mut stacks);
 
@@ -111,6 +103,7 @@ impl Stacks {
     ) -> Vec<Stack<char>> {
         // Getting Supplies in the Crates of the Stacks
 
+        // Initialize new Vector of Stacks
         let mut stacks: Vec<Stack<char>> = (0..count).map(|_| Stack::new()).collect();
 
         // Parsing Each row of string crates to place into stacks
