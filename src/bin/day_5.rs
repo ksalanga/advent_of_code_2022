@@ -4,8 +4,8 @@ fn main() {
     let cargo_crane = fs::read_to_string("./inputs/day_5/example1.txt").unwrap();
 
     let cargo_crane_components: Vec<&str> = cargo_crane.split("\n\r\n").collect();
-    // Cargo Crane has access to Stacks of Crates
 
+    // Cargo Crane has access to Stacks of Crates
     let mut stacks: Stacks = Stacks::new(cargo_crane_components[0]);
 
     assert_eq!(stacks.count, 3);
@@ -17,6 +17,39 @@ fn main() {
     assert_eq!(stacks.stacks[2].pop(), Some('P'));
 
     // Cargo Crane has access to rearrangement procedure
+    move_crates(cargo_crane_components[1], &mut stacks);
+}
+
+fn move_crates(procedure: &str, stacks: &mut Stacks) {
+    procedure.lines().for_each(|instructions| {
+        let move_instructions = MoveInstructions::new(instructions);
+    })
+}
+
+struct MoveInstructions {
+    amount_of_crates: i32,
+    from_stack: i32,
+    to_stack: i32,
+}
+
+impl MoveInstructions {
+    fn new(instructions: &str) -> MoveInstructions {
+        // Split the instructions string by white space and alphanumerics
+        let mut instructions = instructions
+            .split(|c| char::is_alphabetic(c) || char::is_whitespace(c))
+            .filter(|s| !s.is_empty());
+
+        // first number instance in instructions (could be greater than a single digit) is amount
+
+        // second number instance in instructions (could be greater than a single digit) is from stack.
+
+        // third number instance in instructions (could be greater than a single digit) is to stack.
+        MoveInstructions {
+            amount_of_crates: instructions.next().unwrap().parse().unwrap(),
+            from_stack: instructions.next().unwrap().parse().unwrap(),
+            to_stack: instructions.next().unwrap().parse().unwrap(),
+        }
+    }
 }
 
 struct Stacks {
