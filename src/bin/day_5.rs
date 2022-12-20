@@ -19,13 +19,14 @@ fn main() {
     // Cargo Crane has access to rearrangement procedure
     move_crates(cargo_crane_components[1], &mut stacks);
 
-    // let top_of_stacks = String::new();
+    let mut top_crates_of_stacks = String::new();
 
-    assert_eq!(stacks.stacks[0].pop(), Some('C'));
-    assert_eq!(stacks.stacks[1].pop(), Some('M'));
-    assert_eq!(stacks.stacks[2].pop(), Some('Z'));
+    for i in 0..stacks.count {
+        let stacks = &mut stacks.stacks;
+        top_crates_of_stacks.push(stacks[i].pop().unwrap());
+    }
 
-    println!("CMZ");
+    println!("Top Crates in Stacks: {}", top_crates_of_stacks);
 }
 
 fn move_crates(procedure: &str, stacks: &mut Stacks) {
