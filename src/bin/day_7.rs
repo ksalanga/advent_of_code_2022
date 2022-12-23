@@ -67,9 +67,11 @@ impl<'d> Command<'d> {
     fn execute(&self, terminal_output: &mut Peekable<std::str::Lines>) {
         match self {
             Command::CD(dir) => {
+                // TODO: create directory nodes (Dir struct) and traverse directory tree with a current directory
                 println!("Directory: {}", dir.name)
             }
             Command::LS => {
+                // TODO: for any file, add up the size of the file to the current directory
                 println!("LS command executed:");
                 Self::read(terminal_output);
             }
@@ -77,6 +79,8 @@ impl<'d> Command<'d> {
     }
 
     fn read(terminal_output: &mut Peekable<std::str::Lines>) {
+        // TODO: return a list of strings that represent the non command / non EOF terminal output lines
+
         // read every line and increment the iterator until we reach a new command $ or end of file (None)
 
         while let Some(output) = terminal_output.peek() {
