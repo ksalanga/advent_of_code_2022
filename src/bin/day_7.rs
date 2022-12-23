@@ -10,22 +10,82 @@ fn main() {
 
     let mut terminal_output: Peekable<std::str::Lines> = terminal_output.lines().peekable();
 
-    while let Some(command) = terminal_output.next() {
-        if command.contains("$ ls") {
-            read_list(&mut terminal_output);
+    CommandExecutor::start(&mut terminal_output);
+}
+
+struct CommandExecutor {}
+
+impl CommandExecutor {
+    fn start(terminal_output: &mut Peekable<std::str::Lines>) {
+        while let Some(output) = terminal_output.next() {
+            let command = Command::new(output);
+            command.execute(terminal_output);
         }
     }
 }
 
-fn read_list(terminal_output: &mut Peekable<std::str::Lines>) {
-    // read every line and increment the iterator until we reach a new command $ or end of file (None)
+struct Dir<'d> {
+    parent: Option<&'d Dir<'d>>,
+    name: String,
+    size: usize,
+}
 
-    while let Some(output) = terminal_output.peek() {
-        if output.contains("$") {
-            return;
+enum Command<'d> {
+    CD(Dir<'d>),
+    LS,
+}
+
+impl<'d> Command<'d> {
+    fn new(current_line: &str) -> Command<'d> {
+        let mut tokens = current_line.split_whitespace();
+
+        tokens.next();
+
+        if let Some(command) = tokens.next() {
+            match command {
+                "cd" => {
+                    let name = tokens.next();
+
+                    if let None = name {
+                        panic!("no directory for cd provided")
+                    }
+
+                    return Command::CD(Dir {
+                        parent: None,
+                        name: name.unwrap().to_string(),
+                        size: 0,
+                    });
+                }
+                "ls" => return Command::LS,
+                _ => panic!("Command not found"),
+            }
         }
 
-        // do something with list output
-        println!("{}", terminal_output.next().unwrap());
+        panic!("No command in terminal output");
+    }
+
+    fn execute(&self, terminal_output: &mut Peekable<std::str::Lines>) {
+        match self {
+            Command::CD(dir) => {
+                println!("Directory: {}", dir.name)
+            }
+            Command::LS => {
+                println!("LS command executed:");
+                Self::read(terminal_output);
+            }
+        }
+    }
+
+    fn read(terminal_output: &mut Peekable<std::str::Lines>) {
+        // read every line and increment the iterator until we reach a new command $ or end of file (None)
+
+        while let Some(output) = terminal_output.peek() {
+            if output.contains("$") {
+                return;
+            }
+
+            // do something with list output
+            println!("{}", terminal_output.next().unwrap());
+        }
     }
 }
