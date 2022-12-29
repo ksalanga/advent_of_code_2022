@@ -1,4 +1,6 @@
 use std::{fs, iter::Peekable};
+use my_tree::Node;
+
 
 fn main() {
     let terminal_output = fs::read_to_string("./inputs/day_7/example1.txt").unwrap();
