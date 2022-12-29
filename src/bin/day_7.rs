@@ -24,19 +24,18 @@ impl CommandExecutor {
     }
 }
 
-struct Dir<'d> {
-    parent: Option<&'d Dir<'d>>,
+struct Dir {
     name: String,
     size: usize,
 }
 
-enum Command<'d> {
-    CD(Dir<'d>),
+enum Command {
+    CD(Dir),
     LS,
 }
 
-impl<'d> Command<'d> {
-    fn new(current_line: &str) -> Command<'d> {
+impl Command {
+    fn new(current_line: &str) -> Command {
         let mut tokens = current_line.split_whitespace();
 
         tokens.next();
@@ -51,7 +50,6 @@ impl<'d> Command<'d> {
                     }
 
                     return Command::CD(Dir {
-                        parent: None,
                         name: name.unwrap().to_string(),
                         size: 0,
                     });
