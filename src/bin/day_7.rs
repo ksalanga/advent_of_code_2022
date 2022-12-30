@@ -26,6 +26,8 @@ impl CommandExecutor {
 
         while let Some(output) = terminal_output.next() {
             let command = Command::new(output);
+
+            // TODO: Finish executing all commands
             command.execute(terminal_output, &mut current_directory);
 
             if current_directory.upgrade().is_some() && root_directory.is_none() {
@@ -106,8 +108,11 @@ impl Command {
     fn execute(&self, terminal_output: &mut Peekable<std::str::Lines>, current_directory: &mut Weak<Node<Dir>>) {
         match self {
             Command::CD(dir) => {
-                // TODO: create directory nodes (Dir struct) and traverse directory tree with a current directory
-                println!("Directory: {}", dir.name)
+                match dir.name.as_str() {
+                    ".." => *current_directory = current_directory.upgrade().unwrap().get_parent(),
+                    "/" => todo!(),
+                    dir => todo!(),
+                }
             }
             Command::LS => {
                 // TODO: for any file, add up the size of the file to the current directory
@@ -155,5 +160,10 @@ mod tests {
         a.add_size(39);
 
         assert_eq!(a.size, 39);
+    }
+
+    #[test]
+    fn cd_dot_dot() {
+        todo!();
     }
 }
