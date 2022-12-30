@@ -1,5 +1,6 @@
 use std::{fs, iter::Peekable, rc::Weak};
 use my_tree::Node;
+use std::rc::Rc;
 
 
 fn main() {
@@ -19,7 +20,7 @@ struct CommandExecutor {}
 
 impl CommandExecutor {
     fn start(terminal_output: &mut Peekable<std::str::Lines>) {
-        let root_directory: Option<Weak<Node<Dir>>> = None;
+        let mut root_directory: Option<Rc<Node<Dir>>> = None;
 
         let mut current_directory: Weak<Node<Dir>> = Weak::new();
 
@@ -41,7 +42,7 @@ impl CommandExecutor {
     }
 }
 
-fn calculate_directory_total_sizes(root_directory: &Weak<Node<Dir>>) {
+fn calculate_directory_total_sizes(root_directory: &Rc<Node<Dir>>) {
     todo!()
 }
 
