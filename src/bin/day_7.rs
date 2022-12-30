@@ -31,6 +31,25 @@ struct Dir {
     size: usize,
 }
 
+impl PartialEq for Dir {
+    fn eq(&self, other: &Self) -> bool {
+        self.name.eq(&other.name)
+    }
+}
+
+impl Dir {
+    fn new(name: String) -> Dir {
+        Dir {
+            name,
+            size: 0
+        }
+    }
+
+    fn add_size(&mut self, size: usize) {
+        self.size += size;
+    }
+}
+
 enum Command {
     CD(Dir),
     LS,
@@ -91,5 +110,30 @@ impl Command {
             // do something with list output
             println!("{}", terminal_output.next().unwrap());
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dir_equal() {
+        let a = Dir::new("a".to_string());
+
+        let mut b = Dir::new("a".to_string());
+
+        b.add_size(200);
+
+        assert!(a == b);
+    }
+
+    #[test]
+    fn size() {
+        let mut a = Dir::new("a".to_string());
+
+        a.add_size(39);
+
+        assert_eq!(a.size, 39);
     }
 }
