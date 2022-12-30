@@ -26,6 +26,10 @@ impl CommandExecutor {
         while let Some(output) = terminal_output.next() {
             let command = Command::new(output);
             command.execute(terminal_output, &mut current_directory);
+
+            if current_directory.upgrade().is_some() && root_directory.is_none() {
+                root_directory = Some(current_directory.upgrade().unwrap());
+            }
         }
 
         match root_directory {
