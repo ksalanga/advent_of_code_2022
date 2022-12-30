@@ -20,9 +20,10 @@ struct CommandExecutor {}
 impl CommandExecutor {
     fn start(terminal_output: &mut Peekable<std::str::Lines>) {
         let mut current_directory: Weak<Node<Dir>> = Weak::new();
+
         while let Some(output) = terminal_output.next() {
             let command = Command::new(output);
-            command.execute(terminal_output);
+            command.execute(terminal_output, &mut current_directory);
         }
     }
 }
@@ -84,7 +85,7 @@ impl Command {
         panic!("No command in terminal output");
     }
 
-    fn execute(&self, terminal_output: &mut Peekable<std::str::Lines>) {
+    fn execute(&self, terminal_output: &mut Peekable<std::str::Lines>, current_directory: &mut Weak<Node<Dir>>) {
         match self {
             Command::CD(dir) => {
                 // TODO: create directory nodes (Dir struct) and traverse directory tree with a current directory
