@@ -19,13 +19,26 @@ struct CommandExecutor {}
 
 impl CommandExecutor {
     fn start(terminal_output: &mut Peekable<std::str::Lines>) {
+        let root_directory: Option<Weak<Node<Dir>>> = None;
+
         let mut current_directory: Weak<Node<Dir>> = Weak::new();
 
         while let Some(output) = terminal_output.next() {
             let command = Command::new(output);
             command.execute(terminal_output, &mut current_directory);
         }
+
+        match root_directory {
+            Some (root_directory) => {
+                calculate_directory_total_sizes(&root_directory);
+            },
+            None => (),
+        }
     }
+}
+
+fn calculate_directory_total_sizes(root_directory: &Weak<Node<Dir>>) {
+    todo!()
 }
 
 struct Dir {
