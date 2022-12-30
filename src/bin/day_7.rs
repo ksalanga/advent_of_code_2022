@@ -1,4 +1,4 @@
-use std::{fs, iter::Peekable};
+use std::{fs, iter::Peekable, rc::Weak};
 use my_tree::Node;
 
 
@@ -19,6 +19,7 @@ struct CommandExecutor {}
 
 impl CommandExecutor {
     fn start(terminal_output: &mut Peekable<std::str::Lines>) {
+        let mut current_directory: Weak<Node<Dir>> = Weak::new();
         while let Some(output) = terminal_output.next() {
             let command = Command::new(output);
             command.execute(terminal_output);
