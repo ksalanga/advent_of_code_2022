@@ -111,7 +111,7 @@ impl Command {
                 match dir.name.as_str() {
                     ".." => move_up(current_directory),
                     "/" => move_to_root(current_directory),
-                    dir => todo!(),
+                    target_dir => move_to(target_dir, current_directory),
                 }
 
                 fn move_up(current_directory: &mut Option<Rc<Node<Dir>>>) {
@@ -135,6 +135,18 @@ impl Command {
                         }
 
                         move_up(current_directory);
+                    }
+                }
+
+                fn move_to(target_dir: &str, current_directory: &mut Option<Rc<Node<Dir>>>) {
+                    if let Some(directory) = current_directory {
+                        let target_dir = Dir::new(target_dir.to_string());
+
+                        if let Some(directory) = directory.get_child(target_dir) {
+                            if let Some(directory) = directory.upgrade() {
+                                *current_directory = Some(Rc::clone(&directory));
+                            }
+                        }
                     }
                 }
             }
@@ -274,6 +286,93 @@ mod tests {
         cd.execute(&mut terminal_output, &mut current_directory);
 
         assert!(current_directory.is_some());
+    }
+
+    #[test]
+    fn cd_down() {
+        use std::ptr;
+
+        let command = "$ cd c";
+
+        let cd = Command::new(command);
+
+        let mut terminal_output = "line1\nline2\nline3\n".lines().into_iter().peekable();
+
+        let a = Node::new(Dir::new("/".to_string()));
+
+        let b = Node::new(Dir::new("b".to_string()));
+        
+        let c = Node::new(Dir::new("c".to_string()));
+
+        let c_observer = Rc::clone(&c);
+
+        let mut current_directory = Some(Rc::clone(&b));
+
+        b.add_child(&b, c);
+
+        a.add_child(&a, b);
+
+        cd.execute(&mut terminal_output, &mut current_directory);
+
+        assert!(ptr::eq(c_observer.as_ref(), current_directory.unwrap().as_ref()));
+    }
+
+    #[test]
+    fn cd_down_from_root() {
+        use std::ptr;
+
+        let command = "$ cd b";
+
+        let cd = Command::new(command);
+
+        let mut terminal_output = "line1\nline2\nline3\n".lines().into_iter().peekable();
+
+        let a = Node::new(Dir::new("/".to_string()));
+
+        let b = Node::new(Dir::new("b".to_string()));
+        
+        let c = Node::new(Dir::new("c".to_string()));
+
+        let b_observer = Rc::clone(&b);
+
+        let mut current_directory = Some(Rc::clone(&a));
+
+        b.add_child(&b, c);
+
+        a.add_child(&a, b);
+
+        cd.execute(&mut terminal_output, &mut current_directory);
+
+        assert!(ptr::eq(b_observer.as_ref(), current_directory.unwrap().as_ref()));
+    }
+
+    #[test]
+    fn cd_down_fake() {
+        use std::ptr;
+
+        let command = "$ cd fake";
+
+        let cd = Command::new(command);
+
+        let mut terminal_output = "line1\nline2\nline3\n".lines().into_iter().peekable();
+
+        let a = Node::new(Dir::new("/".to_string()));
+
+        let b = Node::new(Dir::new("b".to_string()));
+        
+        let c = Node::new(Dir::new("c".to_string()));
+
+        let b_observer = Rc::clone(&b);
+
+        let mut current_directory = Some(Rc::clone(&a));
+
+        b.add_child(&b, c);
+
+        a.add_child(&a, b);
+
+        cd.execute(&mut terminal_output, &mut current_directory);
+
+        assert!(ptr::eq(a.as_ref(), current_directory.unwrap().as_ref()));
     }
     
 }
