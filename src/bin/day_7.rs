@@ -164,6 +164,26 @@ mod tests {
 
     #[test]
     fn cd_dot_dot() {
-        todo!();
+        use std::ptr;
+
+        let command = "$ cd ..";
+
+        let cd = Command::new(command);
+
+        let mut terminal_output = "line1\nline2\nline3\n".lines().into_iter().peekable();
+
+        // execute() Command
+
+        let a = Node::new(Dir::new("a".to_string()));
+
+        let b = Node::new(Dir::new("b".to_string()));
+
+        let mut current_directory = Rc::downgrade(&b);
+
+        a.add_child(&a, b);
+
+        cd.execute(&mut terminal_output, &mut current_directory);
+
+        assert!(ptr::eq(a.as_ref(), current_directory.upgrade().unwrap().as_ref()));
     }
 }
