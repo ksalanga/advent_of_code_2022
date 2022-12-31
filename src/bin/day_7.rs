@@ -138,15 +138,17 @@ impl Command {
                     }
                 }
 
-                fn move_to(target_dir: &str, current_directory: &mut Option<Rc<Node<Dir>>>) {
+                fn move_to(target_dir_name: &str, current_directory: &mut Option<Rc<Node<Dir>>>) {
                     if let Some(directory) = current_directory {
-                        let target_dir = Dir::new(target_dir.to_string());
+                        let target_dir = Dir::new(target_dir_name.to_string());
 
                         if let Some(directory) = directory.get_child(target_dir) {
                             if let Some(directory) = directory.upgrade() {
-                                *current_directory = Some(Rc::clone(&directory));
+                                return *current_directory = Some(Rc::clone(&directory));
                             }
                         }
+
+                        println!("cannot cd into directory: {}. this directory has not been listed and does not exist.", target_dir_name);
                     }
                 }
             }
@@ -347,7 +349,7 @@ mod tests {
     }
 
     #[test]
-    fn cd_down_fake() {
+    fn cd_nonexistent_child() {
         use std::ptr;
 
         let command = "$ cd fake";
@@ -361,8 +363,6 @@ mod tests {
         let b = Node::new(Dir::new("b".to_string()));
         
         let c = Node::new(Dir::new("c".to_string()));
-
-        let b_observer = Rc::clone(&b);
 
         let mut current_directory = Some(Rc::clone(&a));
 
