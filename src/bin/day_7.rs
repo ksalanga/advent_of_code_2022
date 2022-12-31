@@ -154,6 +154,7 @@ impl Command {
             }
             Command::LS => {
                 // TODO: for any file, add up the size of the file to the current directory
+                todo!();
                 println!("LS command executed:");
                 Self::read(terminal_output);
             }
