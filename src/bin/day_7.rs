@@ -1,4 +1,4 @@
-use std::{fs, iter::Peekable, rc::Weak};
+use std::{fs, iter::Peekable};
 use my_tree::Node;
 use std::rc::Rc;
 
@@ -22,7 +22,7 @@ impl CommandExecutor {
     fn start(terminal_output: &mut Peekable<std::str::Lines>) {
         let mut root_directory: Option<Rc<Node<Dir>>> = None;
 
-        let mut current_directory: Weak<Node<Dir>> = Weak::new();
+        let mut current_directory: Option<Rc<Node<Dir>>> = None;
 
         while let Some(output) = terminal_output.next() {
             let command = Command::new(output);
@@ -30,8 +30,8 @@ impl CommandExecutor {
             // TODO: Finish executing all commands
             command.execute(terminal_output, &mut current_directory);
 
-            if current_directory.upgrade().is_some() && root_directory.is_none() {
-                root_directory = Some(current_directory.upgrade().unwrap());
+            if root_directory.is_none() && current_directory.is_some() {
+                root_directory = Some(Rc::clone(&current_directory.as_ref().unwrap()));
             }
         }
 
@@ -105,7 +105,7 @@ impl Command {
         panic!("No command in terminal output");
     }
 
-    fn execute(&self, terminal_output: &mut Peekable<std::str::Lines>, current_directory: &mut Weak<Node<Dir>>) {
+    fn execute(&self, terminal_output: &mut Peekable<std::str::Lines>, current_directory: &mut Option<Rc<Node<Dir>>>) {
         match self {
             Command::CD(dir) => {
                 match dir.name.as_str() {
