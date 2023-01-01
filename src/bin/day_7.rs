@@ -154,9 +154,24 @@ impl Command {
             }
             Command::LS => {
                 // TODO: for any file, add up the size of the file to the current directory
-                todo!();
-                println!("LS command executed:");
-                Self::read(terminal_output);
+                Self::read(terminal_output).iter().for_each(|output| {
+                    if output.starts_with("dir") {
+                        add_child_dir(output, current_directory);
+
+                fn add_child_dir(output: &str, current_directory: &mut Option<Rc<Node<Dir>>>) {
+                    let output: Vec<&str> = output.split_whitespace().collect();
+                    let new_dir_name = output.get(1);
+
+                    if let Some(new_dir_name) = new_dir_name {
+                        if let Some(directory) = current_directory {
+                            let new_dir = Node::new(Dir::new(new_dir_name.to_string()));
+                            return directory.add_child(&directory, new_dir);
+                        }
+                    } else {
+                        println!("must provide a name to dir command!");
+                    }
+                }
+
             }
         }
     }
@@ -378,5 +393,44 @@ mod tests {
 
         assert!(ptr::eq(a.as_ref(), current_directory.unwrap().as_ref()));
     }
+
+    #[test]
+    fn ls_add_new_dir_from_leaf() {
+        let command = "$ ls";
+
+        let ls = Command::new(command);
+
+        let mut terminal_output = "dir c\n".lines().into_iter().peekable();
+
+        let a = Node::new(Dir::new("/".to_string()));
+
+        let b = Node::new(Dir::new("b".to_string()));
+
+        let mut current_directory = Some(Rc::clone(&b));
+        
+        a.add_child(&a, b);
+
+        ls.execute(&mut terminal_output, &mut current_directory);
+
+        assert!(current_directory.unwrap().get_child(Dir::new("c".to_string())).is_some());
+    }
     
+    #[test]
+    fn ls_add_new_dir_from_root() {
+        let command = "$ ls";
+
+        let ls = Command::new(command);
+
+        let mut terminal_output = "dir b\n".lines().into_iter().peekable();
+
+        let a = Node::new(Dir::new("/".to_string()));
+
+        let mut current_directory = Some(Rc::clone(&a));
+
+        ls.execute(&mut terminal_output, &mut current_directory);
+
+        let current_directory = current_directory.unwrap();
+        assert!(current_directory.get_child(Dir::new("b".to_string())).is_some());
+        assert!(current_directory.get_child(Dir::new("c".to_string())).is_none());
+    }
 }
