@@ -36,16 +36,24 @@ impl CommandExecutor {
         }
 
         match root_directory {
-            Some (root_directory) => {
-                calculate_directory_total_sizes(&root_directory);
+            Some (mut root_directory) => {
+                calculate_filesystem_tree_total_sizes( &mut root_directory);
             },
             None => (),
         }
     }
 }
 
-fn calculate_directory_total_sizes(root_directory: &Rc<Node<Dir>>) {
-    todo!()
+fn calculate_filesystem_tree_total_sizes(current_directory: &mut Rc<Node<Dir>>) -> usize {
+    if current_directory.get_children().is_empty() {
+        return current_directory.value().size;
+    }
+
+    for mut child in current_directory.get_children_mut().iter_mut() {
+        current_directory.value_mut().add_size(calculate_filesystem_tree_total_sizes(&mut child))
+    }
+    
+    current_directory.value().size
 }
 
 struct Dir {
@@ -505,5 +513,60 @@ mod tests {
 
         let current_directory = current_directory.unwrap();
         assert_eq!(current_directory.value().size, 0);
+    }
+
+    #[test]
+    fn tree_total_sizes() {
+        let mut a = Node::new(Dir::new("/".to_string()));
+
+        a.value_mut().size = 1;
+
+        let b = Node::new(Dir::new("b".to_string()));
+        
+        b.value_mut().size = 1;
+
+        let c = Node::new(Dir::new("c".to_string()));
+
+        c.value_mut().size = 1;
+
+        b.add_child(&b, c);
+
+        a.add_child(&a, b);
+
+        assert_eq!(calculate_filesystem_tree_total_sizes(&mut a), 3);
+    }
+
+    #[test]
+    fn tree_total_sizes_2_level() {
+        let mut a = Node::new(Dir::new("/".to_string()));
+
+        a.value_mut().size = 1;
+
+        let b = Node::new(Dir::new("b".to_string()));
+        
+        b.value_mut().size = 1;
+
+        let c = Node::new(Dir::new("c".to_string()));
+
+        c.value_mut().size = 1;
+
+        let observer_c = Rc::clone(&c);
+
+        let d = Node::new(Dir::new("d".to_string()));
+        let e = Node::new(Dir::new("d".to_string()));
+
+        d.value_mut().size = 20;
+        e.value_mut().size = 21;
+
+        c.add_child(&c, d);
+        c.add_child(&c, e);
+
+        b.add_child(&b, c);
+
+        a.add_child(&a, b);
+
+        calculate_filesystem_tree_total_sizes(&mut a);
+        
+        assert_eq!(observer_c.value().size, 42);
     }
 }
