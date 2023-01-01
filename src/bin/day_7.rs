@@ -157,6 +157,10 @@ impl Command {
                 Self::read(terminal_output).iter().for_each(|output| {
                     if output.starts_with("dir") {
                         add_child_dir(output, current_directory);
+                    } else {
+                        add_size(output, current_directory);
+                    }
+                });
 
                 fn add_child_dir(output: &str, current_directory: &mut Option<Rc<Node<Dir>>>) {
                     let output: Vec<&str> = output.split_whitespace().collect();
@@ -172,6 +176,9 @@ impl Command {
                     }
                 }
 
+                fn add_size(output: &str, current_directory: &mut Option<Rc<Node<Dir>>>) {
+                    todo!();
+                }
             }
         }
     }
