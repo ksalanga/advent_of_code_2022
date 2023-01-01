@@ -44,16 +44,35 @@ impl CommandExecutor {
     }
 }
 
-fn calculate_filesystem_tree_total_sizes(current_directory: &mut Rc<Node<Dir>>) -> usize {
+fn calculate_filesystem_tree_total_sizes(current_directory: &mut Rc<Node<Dir>>) {
     if current_directory.get_children().is_empty() {
-        return current_directory.value().size;
+        return;
     }
 
     for mut child in current_directory.get_children_mut().iter_mut() {
-        current_directory.value_mut().add_size(calculate_filesystem_tree_total_sizes(&mut child))
+        calculate_filesystem_tree_total_sizes(&mut child)
     }
-    
-    current_directory.value().size
+
+    for child in current_directory.get_children().iter() {
+        current_directory.value_mut().add_size(child.value().size);
+    }
+}
+
+fn total_size_of_dirs_to_delete(current_directory: &Rc<Node<Dir>>, total_size: &mut usize) {
+
+    let total_size_threshold: usize = 100000;
+
+    if current_directory.value().size <= total_size_threshold {
+        *total_size += current_directory.value().size
+    }
+
+    if current_directory.get_children().is_empty() {
+        return;
+    }
+
+    for child in current_directory.get_children().iter() {
+        total_size_of_dirs_to_delete(child, total_size);
+    }
 }
 
 struct Dir {
@@ -533,7 +552,9 @@ mod tests {
 
         a.add_child(&a, b);
 
-        assert_eq!(calculate_filesystem_tree_total_sizes(&mut a), 3);
+        calculate_filesystem_tree_total_sizes(&mut a);
+
+        assert_eq!(a.value().size, 3);
     }
 
     #[test]
@@ -568,5 +589,43 @@ mod tests {
         calculate_filesystem_tree_total_sizes(&mut a);
         
         assert_eq!(observer_c.value().size, 42);
+    }
+
+    #[test]
+    fn dirs_to_delete() {
+        let mut root = Node::new(Dir::new("/".to_string()));
+
+        let _b = root.value_mut().add_size(14848514);
+        let _c = root.value_mut().add_size(8504156);
+
+        let a = Node::new(Dir::new("a".to_string()));
+
+        let _f = a.value_mut().add_size(29116);
+        let _g = a.value_mut().add_size(2557);
+        let _h = a.value_mut().add_size(62596);
+
+        let e = Node::new(Dir::new("e".to_string()));
+
+        let _i = e.value_mut().add_size(584);
+
+        a.add_child(&a, e);
+
+        let d = Node::new(Dir::new("d".to_string()));
+
+        let _j = d.value_mut().add_size(4060174);
+        let _d_log = d.value_mut().add_size(8033020);
+        let _d_ext = d.value_mut().add_size(5626152);
+        let _k = d.value_mut().add_size(7214296);
+
+        root.add_child(&root, a);
+        root.add_child(&root, d);
+
+        let mut total_size = 0;
+
+        calculate_filesystem_tree_total_sizes(&mut root);
+
+        total_size_of_dirs_to_delete(&root, &mut total_size);
+
+        assert_eq!(total_size, 95437);
     }
 }
