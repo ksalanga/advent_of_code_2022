@@ -38,6 +38,10 @@ impl CommandExecutor {
         match root_directory {
             Some (mut root_directory) => {
                 calculate_filesystem_tree_total_sizes( &mut root_directory);
+                let mut total_size = 0;
+                total_size_of_dirs_to_delete(&root_directory, &mut total_size);
+
+                println!("Total Size of Dirs to delete: {}", total_size);
             },
             None => (),
         }
