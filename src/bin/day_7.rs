@@ -165,15 +165,18 @@ impl Command {
         // TODO: return a list of strings that represent the non command / non EOF terminal output lines
 
         // read every line and increment the iterator until we reach a new command $ or end of file (None)
+        let mut lines = vec![];
 
         while let Some(output) = terminal_output.peek() {
             if output.contains("$") {
-                return;
+                break;
             }
 
             // do something with list output
-            println!("{}", terminal_output.next().unwrap());
+            lines.push(terminal_output.next().unwrap());
         }
+
+        lines
     }
 }
 
