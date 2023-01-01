@@ -161,7 +161,7 @@ impl Command {
         }
     }
 
-    fn read(terminal_output: &mut Peekable<std::str::Lines>) {
+    fn read<'a>(terminal_output: &mut Peekable<std::str::Lines<'a>>) -> Vec<&'a str> {
         // TODO: return a list of strings that represent the non command / non EOF terminal output lines
 
         // read every line and increment the iterator until we reach a new command $ or end of file (None)
