@@ -177,7 +177,16 @@ impl Command {
                 }
 
                 fn add_size(output: &str, current_directory: &mut Option<Rc<Node<Dir>>>) {
-                    todo!();
+                    let output: Vec<&str> = output.split_whitespace().collect();
+                    let file_size = output.get(0);
+
+                    if let Some(file_size) = file_size {
+                        let file_size = file_size.parse::<usize>().unwrap();
+
+                        if let Some(directory) = current_directory {
+                            directory.value_mut().add_size(file_size);
+                        }
+                    }
                 }
             }
         }
@@ -439,5 +448,62 @@ mod tests {
         let current_directory = current_directory.unwrap();
         assert!(current_directory.get_child(Dir::new("b".to_string())).is_some());
         assert!(current_directory.get_child(Dir::new("c".to_string())).is_none());
+    }
+
+    #[test]
+    fn ls_add_size_from_root() {
+        let command = "$ ls";
+
+        let ls = Command::new(command);
+
+        let mut terminal_output = "5 a\n5 b\n6 b".lines().into_iter().peekable();
+
+        let a = Node::new(Dir::new("/".to_string()));
+
+        let mut current_directory = Some(Rc::clone(&a));
+
+        ls.execute(&mut terminal_output, &mut current_directory);
+
+        let current_directory = current_directory.unwrap();
+        assert_eq!(current_directory.value().size, 16);
+    }
+
+    #[test]
+    fn ls_add_size_from_leaf() {
+        let command = "$ ls";
+
+        let ls = Command::new(command);
+
+        let mut terminal_output = "9 a\n10 b\n2 c".lines().into_iter().peekable();
+
+        let a = Node::new(Dir::new("/".to_string()));
+        let b = Node::new(Dir::new("b".to_string()));
+
+        let mut current_directory = Some(Rc::clone(&b));
+
+        a.add_child(&a, b);
+
+        ls.execute(&mut terminal_output, &mut current_directory);
+
+        let current_directory = current_directory.unwrap();
+        assert_eq!(current_directory.value().size, 21);
+    }
+
+    #[test]
+    fn ls_no_add_size() {
+        let command = "$ ls";
+
+        let ls = Command::new(command);
+
+        let mut terminal_output = "".lines().into_iter().peekable();
+
+        let a = Node::new(Dir::new("/".to_string()));
+
+        let mut current_directory = Some(Rc::clone(&a));
+
+        ls.execute(&mut terminal_output, &mut current_directory);
+
+        let current_directory = current_directory.unwrap();
+        assert_eq!(current_directory.value().size, 0);
     }
 }
