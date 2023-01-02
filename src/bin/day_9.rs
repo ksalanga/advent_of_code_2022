@@ -23,6 +23,7 @@ impl Direction {
 // fields:
 // head and tail
 
+#[derive(Clone, Copy)]
 struct Position {
     x: i32,
     y: i32,
@@ -38,7 +39,7 @@ impl Knot {
             position: Position { x: 0, y: 0 },
         }
     }
-    fn shift(&mut self, direction: Direction) {
+    fn shift(&mut self, direction: &Direction) {
         match direction {
             Direction::Up => self.position.y += 1,
             Direction::Down => self.position.y -= 1,
@@ -61,8 +62,30 @@ impl Rope {
         }
     }
 
-    fn move_head(&mut self, direction: Direction) {
-        todo!()
+    fn new_starting_position(position: Position) -> Rope {
+        Rope {
+            head: Knot { position },
+            tail: Knot { position },
+        }
+    }
+
+    fn move_head(&mut self, direction: &Direction) {
+        let was_diagonal = self.is_diagonal();
+
+        self.head.shift(direction);
+
+        if self.is_long() {
+            self.tail.shift(direction);
+
+            if was_diagonal {
+                match direction {
+                    Direction::Up | Direction::Down => self.tail.position.x = self.head.position.x,
+                    Direction::Left | Direction::Right => {
+                        self.tail.position.y = self.head.position.y
+                    }
+                }
+            }
+        }
     }
 
     fn is_diagonal(&self) -> bool {
@@ -74,19 +97,6 @@ impl Rope {
             || (self.head.position.y - self.tail.position.y).abs() >= 2
     }
 }
-
-// methods:
-// move(direction)
-// store that the rope was attached diagonally or not
-// head moves(direction)
-// after head moves, is one of the x and y distances between head and tail >= 2?
-// if yes:
-// tail moves(direction)
-// if was diagonally attached:
-// if head moved up/down (y direction):
-// make tail's x position = head's x position
-// else if head move left/right (x direction):
-// make tail's y position = head's y position
 
 // calculate if head and tail are attached diagonally()
 
@@ -170,5 +180,96 @@ mod tests {
         rope.head.position.y = 1;
 
         assert!(rope.is_long());
+    }
+
+    #[test]
+    fn move_new_rope_up_1_tail_stays() {
+        let mut rope = Rope::new();
+
+        rope.move_head(&Direction::Up);
+
+        assert!(rope.tail.position.x == 0);
+        assert!(rope.tail.position.y == 0);
+    }
+
+    #[test]
+    fn move_new_rope_up_2_tail_moves_up_1() {
+        let mut rope = Rope::new();
+
+        rope.move_head(&Direction::Up);
+        rope.move_head(&Direction::Up);
+
+        assert!(rope.tail.position.x == 0);
+        assert!(rope.tail.position.y == 1);
+    }
+
+    #[test]
+    fn move_new_rope_down_2_tail_moves_down_1() {
+        let mut rope = Rope::new_starting_position(Position { x: 2, y: 2 });
+
+        rope.move_head(&Direction::Down);
+        rope.move_head(&Direction::Down);
+
+        assert!(rope.tail.position.x == 2);
+        assert!(rope.tail.position.y == 1);
+    }
+
+    #[test]
+    fn move_new_rope_right_2_tail_moves_right_1() {
+        let mut rope = Rope::new();
+
+        rope.move_head(&Direction::Right);
+        rope.move_head(&Direction::Right);
+
+        assert!(rope.tail.position.x == 1);
+        assert!(rope.tail.position.y == 0);
+    }
+
+    #[test]
+    fn move_new_rope_left_2_tail_moves_left_1() {
+        let mut rope = Rope::new_starting_position(Position { x: 2, y: 2 });
+
+        rope.move_head(&Direction::Left);
+        rope.move_head(&Direction::Left);
+
+        assert!(rope.tail.position.x == 1);
+        assert!(rope.tail.position.y == 2);
+    }
+
+    #[test]
+    fn move_new_rope_diagonally_tail_stays() {
+        let mut rope = Rope::new();
+
+        rope.move_head(&Direction::Up);
+        rope.move_head(&Direction::Right);
+
+        assert!(rope.tail.position.x == 0);
+        assert!(rope.tail.position.y == 0);
+    }
+
+    #[test]
+    fn move_diagonal_rope_up_tail_follows() {
+        let mut diagonal_rope = Rope::new();
+
+        diagonal_rope.move_head(&Direction::Up);
+        diagonal_rope.move_head(&Direction::Right);
+
+        diagonal_rope.move_head(&Direction::Up);
+
+        assert!(diagonal_rope.tail.position.x == 1);
+        assert!(diagonal_rope.tail.position.y == 1);
+    }
+
+    #[test]
+    fn move_diagonal_rope_right_tail_follows() {
+        let mut diagonal_rope = Rope::new_starting_position(Position { x: 1, y: 1 });
+
+        diagonal_rope.move_head(&Direction::Up);
+        diagonal_rope.move_head(&Direction::Right);
+
+        diagonal_rope.move_head(&Direction::Right);
+
+        assert!(diagonal_rope.tail.position.x == 2);
+        assert!(diagonal_rope.tail.position.y == 2);
     }
 }
