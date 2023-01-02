@@ -1,8 +1,7 @@
 use std::collections::HashSet;
 use std::fs;
 use std::hash::Hash;
-// enum direction:
-// up, down, left, right
+
 enum Direction {
     Up,
     Down,
@@ -21,10 +20,6 @@ impl Direction {
         }
     }
 }
-
-// struct rope:
-// fields:
-// head and tail
 
 #[derive(Eq, Hash, PartialEq, Clone, Copy)]
 struct Position {
@@ -101,16 +96,6 @@ impl Rope {
             || (self.head.position.y - self.tail.position.y).abs() >= 2
     }
 }
-
-// start:
-// create a tail position set.
-
-// parse the lines.
-// while we have lines:
-// split line by whitespace
-// create a new direction for line[0]
-// times to move in that direction = lines[1]
-// move
 
 macro_rules! loopn {
     ($n:expr, $body:block) => {
