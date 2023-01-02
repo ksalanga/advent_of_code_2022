@@ -1,3 +1,6 @@
+use std::collections::HashSet;
+use std::fs;
+use std::hash::Hash;
 // enum direction:
 // up, down, left, right
 enum Direction {
@@ -23,7 +26,7 @@ impl Direction {
 // fields:
 // head and tail
 
-#[derive(Clone, Copy)]
+#[derive(Eq, Hash, PartialEq, Clone, Copy)]
 struct Position {
     x: i32,
     y: i32,
@@ -62,6 +65,7 @@ impl Rope {
         }
     }
 
+    #[allow(dead_code)]
     fn new_starting_position(position: Position) -> Rope {
         Rope {
             head: Knot { position },
@@ -98,10 +102,6 @@ impl Rope {
     }
 }
 
-// calculate if head and tail are attached diagonally()
-
-// calculate if x and y distances are >= 2()
-
 // start:
 // create a tail position set.
 
@@ -112,13 +112,62 @@ impl Rope {
 // times to move in that direction = lines[1]
 // move
 
+macro_rules! loopn {
+    ($n:expr, $body:block) => {
+        for _ in 0..$n {
+            $body
+        }
+    };
+}
+
 fn main() {
-    todo!();
+    let file_path_from_src = "./inputs/day_9/input.txt";
+    let move_instructions: String = fs::read_to_string(file_path_from_src).unwrap();
+
+    let mut rope = Rope::new();
+
+    let mut tail_touched_coords: HashSet<Position> = HashSet::new();
+    tail_touched_coords.insert(rope.tail.position);
+
+    move_instructions.lines().for_each(|line| {
+        let input: Vec<&str> = line.split_whitespace().collect();
+
+        let move_direction: Direction = Direction::new(input[0]);
+
+        let times_to_move: i32 = input[1].parse().unwrap();
+
+        loopn!(times_to_move, {
+            rope.move_head(&move_direction);
+            tail_touched_coords.insert(rope.tail.position);
+        })
+    });
+
+    println!("{}", tail_touched_coords.len());
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn touched_coords() {
+        let mut touched_coords: HashSet<Position> = HashSet::new();
+
+        touched_coords.insert(Position { x: 0, y: 0 });
+        touched_coords.insert(Position { x: 0, y: 0 });
+
+        assert_eq!(touched_coords.len(), 1);
+    }
+
+    #[test]
+    fn touched_coords_2() {
+        let mut touched_coords: HashSet<Position> = HashSet::new();
+
+        touched_coords.insert(Position { x: 0, y: 0 });
+        touched_coords.insert(Position { x: 0, y: 1 });
+
+        assert_eq!(touched_coords.len(), 2);
+    }
 
     #[test]
     fn new_rope_is_not_diagonal() {
