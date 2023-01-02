@@ -59,8 +59,20 @@ struct Coordinates {
     col: usize,
 }
 
-#[derive(Clone, Default)]
+#[derive(Copy, Clone, Default, Debug, PartialEq, Eq)]
 struct Height(usize);
+
+impl Ord for Height {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.0.cmp(&other.0)
+    }
+}
+
+impl PartialOrd for Height {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
 
 fn find_visible_trees(visible_trees: &mut Vec<Vec<bool>>, trees: &Vec<Vec<usize>>) {
     // scan a line of trees from a specific side/edge (top/bottom side or left/right side):
@@ -70,7 +82,7 @@ fn find_visible_trees(visible_trees: &mut Vec<Vec<bool>>, trees: &Vec<Vec<usize>
         find_visible_trees_from_edge(visible_trees, side);
     };
 
-    // map the trees into a tree coords 2d array of Vec<(Height, Coordinates)>
+    // map the trees into a tree coords 2d array of (Height, Coordinates)
     let mut tree_coords_left_right: Vec<Vec<(Height, Coordinates)>> =
         map_to_height_and_coords(get_coords(trees));
 
@@ -141,11 +153,11 @@ fn find_visible_trees_from_edge(
     line_of_trees: &Vec<(Height, Coordinates)>,
 ) {
     // skip the front edge but get its height.
-    let mut current_tallest_tree_height: usize = line_of_trees[0].0 .0;
+    let mut current_tallest_tree_height: Height = line_of_trees[0].0;
 
     // ignore the last edge
     for i in 1..line_of_trees.len() - 1 {
-        let current_tree_height: usize = line_of_trees[i].0 .0;
+        let current_tree_height: Height = line_of_trees[i].0;
 
         let current_tree_coords: &Coordinates = &line_of_trees[i].1;
 
