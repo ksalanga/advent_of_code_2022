@@ -2,7 +2,7 @@ use std::fs;
 use std::vec::Vec;
 
 fn main() {
-    let file_path_from_src = "./inputs/day_8/input.txt";
+    let file_path_from_src = "./inputs/day_8/example.txt";
     let contents: String = fs::read_to_string(file_path_from_src).unwrap();
 
     let lines: Vec<&str> = contents.lines().collect();
@@ -53,61 +53,55 @@ fn set_borders_true(grid: &mut Vec<Vec<bool>>) {
     }
 }
 
+#[derive(Clone, Default)]
 struct Coordinates {
     row: usize,
     col: usize
 }
 
+#[derive(Clone, Default)]
 struct Height(usize);
 
 fn find_visible_trees(visible_trees: &mut Vec<Vec<bool>>, trees: &Vec<Vec<usize>>) {
-    // scan the trees:
-    let row_len = trees.len();
-    let col_len = trees[0].len();
+    // scan a line of trees from a specific side/edge (top/bottom side or left/right side):
+    let mut scan_sides = 
+    |side: &mut Vec<(Height, Coordinates)>| {
+        find_visible_trees_from_edge(visible_trees, side);
+        side.reverse();
+        find_visible_trees_from_edge(visible_trees, side);
+    };
 
-    // scanning the columns
-    // top to bottom
-    // bottom to top
-    for col in 0..col_len {
-        let mut top_side: Vec<(Height, Coordinates)> = Vec::new();
-        
-        for row in 0..row_len {
-            let tree_height = Height(trees[row][col]);
-            let tree_coords = Coordinates{row, col};
-            
-            let tree = (tree_height, tree_coords);
-            
-            top_side.push(tree);
+    // map the trees into a tree coords 2d array of Vec<(Height, Coordinates)>
+    let mut tree_coords_left_right: Vec<Vec<(Height, Coordinates)>> = map_to_coords(trees);
+
+    // scan the visible tree rows (left to right and right to left) by going through the tree coords rows.
+    tree_coords_left_right.iter_mut().for_each(&mut scan_sides);
+
+    // swap the rows and the columns of the mapped tree cords matrix.
+    // now, going through the rows of this swapped matrix will be going through the "columns" of the original matrix since the coordinates remain the same during the swap.
+    let mut tree_coords_top_bottom = swap_rows_and_columns(&tree_coords_left_right);
+    
+    // view the visible tree columns (top to bottom and bottom to top) by going through these new mapped rows.
+    tree_coords_top_bottom.iter_mut().for_each(&mut scan_sides);
+}
+
+fn map_to_coords(arr: &Vec<Vec<usize>>) -> Vec<Vec<(Height, Coordinates)>> {
+    arr.iter().enumerate().map(|(i, row)| {
+        row.iter().enumerate().map(move |(j, &height)| (Height(height), Coordinates{row: i, col: j})).collect::<Vec<_>>()
+    }).collect()
+}
+
+fn swap_rows_and_columns<T>(arr: &Vec<Vec<T>>) -> Vec<Vec<T>>
+where
+    T: Clone + Default,
+{
+    let mut result = vec![vec![T::default(); arr.len()]; arr[0].len()];
+    for (i, row) in arr.iter().enumerate() {
+        for (j, val) in row.iter().enumerate() {
+            result[j][i] = val.clone();
         }
-
-        find_visible_trees_from_edge(visible_trees, &top_side);
-
-        let bottom_side: Vec<(Height, Coordinates)> = top_side.into_iter().rev().collect();
-
-        find_visible_trees_from_edge(visible_trees, &bottom_side);
     }
-
-    // scanning the rows
-    // left to right
-    // right to left
-    for row in 0..row_len {
-        let mut left_side: Vec<(Height, Coordinates)> = Vec::new();
-        
-        for col in 0..col_len {
-            let tree_height = Height(trees[row][col]);
-            let tree_coords = Coordinates{row, col};
-            
-            let tree = (tree_height, tree_coords);
-            
-            left_side.push(tree);
-        }
-
-        find_visible_trees_from_edge(visible_trees, &mut left_side);
-
-        let mut right_side: Vec<(Height, Coordinates)> = left_side.into_iter().rev().collect();
-
-        find_visible_trees_from_edge(visible_trees, &mut right_side);
-    }
+    result
 }
 
 fn find_visible_trees_from_edge(visible_trees: &mut Vec<Vec<bool>>, line_of_trees: &Vec<(Height, Coordinates)>) {
