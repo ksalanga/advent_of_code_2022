@@ -127,7 +127,7 @@ fn main() {
         })
     });
 
-    println!("{}", tail_touched_coords.len());
+    println!("answer: {}", tail_touched_coords.len());
 }
 
 #[cfg(test)]
