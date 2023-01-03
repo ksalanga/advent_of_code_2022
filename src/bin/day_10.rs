@@ -49,7 +49,7 @@ impl CPU {
 }
 
 fn main() {
-    let file_path_from_src = "./inputs/day_9/input.txt";
+    let file_path_from_src = "./inputs/day_10/input.txt";
     let cpu_instructions: String = fs::read_to_string(file_path_from_src).unwrap();
 
     let (tx, rx) = mpsc::channel::<(usize, i32)>();
