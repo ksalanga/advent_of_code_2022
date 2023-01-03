@@ -1,5 +1,7 @@
-use std::fs;
+use std::sync::mpsc;
+use std::sync::mpsc::Receiver;
 use std::sync::mpsc::Sender;
+use std::{fs, thread};
 // struct CPU
 // field:
 // cycle: usize
@@ -66,4 +68,23 @@ impl CPU {
 fn main() {
     let file_path_from_src = "./inputs/day_9/input.txt";
     let cpu_instructions: String = fs::read_to_string(file_path_from_src).unwrap();
+
+    let (tx, rx) = mpsc::channel::<(usize, i32)>();
+
+    let cpu = CPU::new(tx);
+
+    let receiver_handle = thread::spawn(move || signal_receiver(rx));
+
+    for instruction in cpu_instructions.lines() {
+        todo!()
+    }
+
+    receiver_handle.join().unwrap()
+}
+
+fn signal_receiver(receiver: Receiver<(usize, i32)>) {
+    for cpu_state in receiver {
+        let (cycle, x_register) = cpu_state;
+        todo!()
+    }
 }
