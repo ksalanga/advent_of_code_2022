@@ -60,8 +60,32 @@ impl CPU {
         }
     }
 
-    fn execute(instruction: &str) {
-        todo!()
+    fn execute(&mut self, instruction: &str) {
+        let instruction: Vec<&str> = instruction.split_whitespace().collect();
+
+        match instruction[0] {
+            "addx" => self.addx(instruction[1].parse().unwrap()),
+            "noop" => self.noop(),
+            i => panic!("instruction {} does not exist", i),
+        }
+    }
+
+    fn addx(&mut self, value: i32) {
+        self.noop();
+
+        self.cycle += 1;
+        self.x_register += value;
+
+        self.transmitter
+            .send((self.cycle, self.x_register))
+            .unwrap();
+    }
+
+    fn noop(&mut self) {
+        self.cycle += 1;
+        self.transmitter
+            .send((self.cycle, self.x_register))
+            .unwrap();
     }
 }
 
