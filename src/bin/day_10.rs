@@ -12,7 +12,7 @@ struct CPU {
 impl CPU {
     fn new(transmitter: Sender<(usize, i32)>) -> CPU {
         CPU {
-            cycle: 0,
+            cycle: 1,
             x_register: 1,
             transmitter,
         }
@@ -41,6 +41,7 @@ impl CPU {
 
     fn noop(&mut self) {
         self.cycle += 1;
+
         self.transmitter
             .send((self.cycle, self.x_register))
             .unwrap();
@@ -71,17 +72,18 @@ fn main() {
 }
 
 fn signal_strength_receiver(receiver: Receiver<(usize, i32)>) {
-    let mut signal_strength = 0;
+    let mut total_signal_strength = 0;
     let mut i = 0;
 
     for cpu_state in receiver {
         let (cycle, x_register) = cpu_state;
 
-        if cycle % 20 + 40 * i == 0 {
-            signal_strength += x_register;
+        if cycle % (20 + 40 * i) == 0 {
+            let signal_strength: i32 = cycle as i32 * x_register;
+            total_signal_strength += signal_strength;
             i += 1;
         }
     }
 
-    println!("Final Signal Strength: {}", signal_strength);
+    println!("Final Signal Strength: {}", total_signal_strength);
 }
