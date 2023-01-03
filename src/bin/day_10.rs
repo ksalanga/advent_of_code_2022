@@ -95,13 +95,19 @@ fn main() {
 
     let (tx, rx) = mpsc::channel::<(usize, i32)>();
 
-    let cpu = CPU::new(tx);
+    let mut cpu = CPU::new(tx);
 
     let receiver_handle = thread::spawn(move || signal_receiver(rx));
 
     for instruction in cpu_instructions.lines() {
-        todo!()
+        if cpu.cycle > 220 {
+            break;
+        }
+
+        cpu.execute(instruction);
     }
+
+    drop(cpu);
 
     receiver_handle.join().unwrap()
 }
