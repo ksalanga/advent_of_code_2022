@@ -1,3 +1,5 @@
+use std::fs;
+use std::sync::mpsc::Sender;
 // struct CPU
 // field:
 // cycle: usize
@@ -41,6 +43,27 @@
 // increment i by 1
 // add register value to signal strength
 
+struct CPU {
+    cycle: usize,
+    x_register: i32,
+    transmitter: Sender<(usize, i32)>,
+}
+
+impl CPU {
+    fn new(transmitter: Sender<(usize, i32)>) -> CPU {
+        CPU {
+            cycle: 0,
+            x_register: 1,
+            transmitter,
+        }
+    }
+
+    fn execute(instruction: &str) {
+        todo!()
+    }
+}
+
 fn main() {
-    todo!()
+    let file_path_from_src = "./inputs/day_9/input.txt";
+    let cpu_instructions: String = fs::read_to_string(file_path_from_src).unwrap();
 }
