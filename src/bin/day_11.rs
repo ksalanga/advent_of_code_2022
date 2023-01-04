@@ -1,5 +1,5 @@
-use std::borrow::BorrowMut;
 use std::cell::RefCell;
+use std::ptr;
 use std::rc::Rc;
 
 // Parsing:
@@ -107,7 +107,11 @@ impl Monkey {
         let monkey = (self.throw_to_monkey)(&item_to_throw);
 
         let monkeys = &self.friends.borrow();
-        let mut monkey = monkeys[monkey as usize].borrow_mut();
+
+        if ptr::eq(target_monkey.as_ptr(), self) {
+            return self.items.push(item_to_throw);
+        }
+
 
         monkey.add_item(item_to_throw);
     }
