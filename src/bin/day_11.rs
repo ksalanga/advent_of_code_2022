@@ -80,6 +80,31 @@ impl FromStr for Monkey {
     type Err = ParseMonkeyError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        fn parse_starting_items(s: &str) -> Result<Vec<Item>, ParseMonkeyError> {
+            let s: Vec<&str> = s.split(':').collect();
+
+            let s = s.get(1).ok_or(ParseMonkeyError)?;
+
+            let s: Result<Vec<i32>, ParseIntError> = s
+                .split(|c: char| c.is_whitespace() || c == ',')
+                .filter(|s| !s.is_empty())
+                .map(|worry_level| worry_level.parse::<i32>())
+                .collect();
+
+            let s = match s {
+                Ok(s) => s,
+                Err(_) => return Err(ParseMonkeyError),
+            };
+
+            let s = s
+                .iter()
+                .map(|worry_level| Item {
+                    worry_level: *worry_level,
+                })
+                .collect();
+
+            Ok(s)
+        }
         // Monkey 0:
         //   Starting items: 79, 98
         //   Operation: new = old * 19
@@ -90,16 +115,9 @@ impl FromStr for Monkey {
         s.next();
 
         let starting_items = s.next().ok_or(ParseMonkeyError)?;
-        let starting_items: Vec<&str> = starting_items.split(':').collect();
-        let starting_items = starting_items.get(1).ok_or(ParseMonkeyError)?;
+        let starting_items = parse_starting_items(starting_items)?;
 
-        let starting_items: Vec<Item> = starting_items
-            .split(|c: char| c.is_whitespace() || c == ',')
-            .filter(|s| !s.is_empty())
-            .map(|worry_level| Item {
-                worry_level: worry_level.parse::<i32>().unwrap(),
-            })
-            .collect();
+        let operation = s.next().ok_or(ParseMonkeyError)?;
 
         Ok(Monkey {
             items: starting_items,
@@ -199,6 +217,20 @@ mod tests {
         assert_eq!(monkey_items.len(), 2);
         assert_eq!(monkey_items[0].worry_level, 79);
         assert_eq!(monkey_items[1].worry_level, 98);
+    }
+
+    #[test]
+    fn parse_incorrect_starting_items() {
+        let monkey_str = "Monkey 0:
+        Starting items: 79, 98, F
+        Operation: new = old * 19
+        Test: divisible by 23
+          If true: throw to monkey 2
+          If false: throw to monkey 3";
+
+        let monkey: Result<Monkey, ParseMonkeyError> = Monkey::from_str(monkey_str);
+
+        assert!(monkey.is_err());
     }
 
     #[test]
