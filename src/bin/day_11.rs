@@ -66,7 +66,7 @@ struct Item {
 struct Monkey {
     items: Vec<Item>,
     operation: Box<dyn Fn(&mut Item)>,
-    throw_to_monkey: Box<dyn Fn(&Item) -> i32>,
+    throw_to_monkey_id: Box<dyn Fn(&Item) -> i32>,
     friends: Rc<RefCell<Vec<RefCell<Monkey>>>>,
 }
 
@@ -79,7 +79,7 @@ impl Monkey {
         let monkey_true = 1;
         let monkey_false = 2;
 
-        let throw_to_monkey = move |item: &Item| {
+        let throw_to_monkey_id = move |item: &Item| {
             if item.worry_level % mod_by == 0 {
                 monkey_true
             } else {
@@ -90,7 +90,7 @@ impl Monkey {
         Monkey {
             items,
             operation: Box::new(operation),
-            throw_to_monkey: Box::new(throw_to_monkey),
+            throw_to_monkey_id: Box::new(throw_to_monkey_id),
             friends: Rc::clone(&friends),
         }
     }
@@ -104,16 +104,19 @@ impl Monkey {
 
         (self.operation)(&mut item_to_throw);
 
-        let monkey = (self.throw_to_monkey)(&item_to_throw);
+        let target_monkey_id = (self.throw_to_monkey_id)(&item_to_throw);
 
         let monkeys = &self.friends.borrow();
+
+        let target_monkey = &monkeys[target_monkey_id as usize];
 
         if ptr::eq(target_monkey.as_ptr(), self) {
             return self.items.push(item_to_throw);
         }
 
+        let mut target_monkey = target_monkey.borrow_mut();
 
-        monkey.add_item(item_to_throw);
+        target_monkey.add_item(item_to_throw);
     }
 }
 
