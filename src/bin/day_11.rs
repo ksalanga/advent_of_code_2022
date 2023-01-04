@@ -1,6 +1,9 @@
 use std::cell::RefCell;
+use std::fmt::Error;
+use std::num::ParseIntError;
 use std::ptr;
 use std::rc::Rc;
+use std::str::FromStr;
 
 // Parsing:
 // split the input by the blank spaces:
@@ -70,6 +73,43 @@ struct Monkey {
     friends: Rc<RefCell<Vec<RefCell<Monkey>>>>,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+struct ParseMonkeyError;
+
+impl FromStr for Monkey {
+    type Err = ParseMonkeyError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // Monkey 0:
+        //   Starting items: 79, 98
+        //   Operation: new = old * 19
+        //   Test: divisible by 23
+        //     If true: throw to monkey 2
+        //     If false: throw to monkey 3
+        let mut s = s.lines();
+        s.next();
+
+        let starting_items = s.next().ok_or(ParseMonkeyError)?;
+        let starting_items: Vec<&str> = starting_items.split(':').collect();
+        let starting_items = starting_items.get(1).ok_or(ParseMonkeyError)?;
+
+        let starting_items: Vec<Item> = starting_items
+            .split(|c: char| c.is_whitespace() || c == ',')
+            .filter(|s| !s.is_empty())
+            .map(|worry_level| Item {
+                worry_level: worry_level.parse::<i32>().unwrap(),
+            })
+            .collect();
+
+        Ok(Monkey {
+            items: starting_items,
+            operation: Box::new(|item| ()),
+            throw_to_monkey_id: Box::new(|item| 69),
+            friends: Rc::new(RefCell::new(vec![])),
+        })
+    }
+}
+
 impl Monkey {
     fn new_dummy(friends: &Rc<RefCell<Vec<RefCell<Monkey>>>>) -> Monkey {
         let item = Item { worry_level: 1 };
@@ -127,6 +167,40 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn split() {
+        let s = " 79, 98";
+        let s: Vec<&str> = s
+            .split(|c: char| c == ',' || c.is_whitespace())
+            .filter(|s| !s.is_empty())
+            .collect();
+
+        assert_eq!(s.len(), 2);
+    }
+
+    #[test]
+    fn parse_starting_items() {
+        let monkey_str = "Monkey 0:
+        Starting items: 79, 98
+        Operation: new = old * 19
+        Test: divisible by 23
+          If true: throw to monkey 2
+          If false: throw to monkey 3";
+
+        let monkey: Result<Monkey, ParseMonkeyError> = Monkey::from_str(monkey_str);
+
+        assert!(monkey.is_ok());
+
+        let monkey = monkey.unwrap();
+
+        let monkey_items = monkey.items;
+
+        assert_eq!(monkey_items.len(), 2);
+        assert_eq!(monkey_items[0].worry_level, 79);
+        assert_eq!(monkey_items[1].worry_level, 98);
+    }
+
     #[test]
     fn monkey_throws_to_monkey() {
         let monkeys: Rc<RefCell<Vec<RefCell<Monkey>>>> = Rc::new(RefCell::new(Vec::new()));
