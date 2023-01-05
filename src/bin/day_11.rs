@@ -111,32 +111,54 @@ impl StringMonkeyParser {
     }
 
     fn operation(s: &str) -> Result<Box<dyn Fn(&mut Item)>, ParseMonkeyError> {
-        let mut s = s.split_whitespace().rev();
+        fn remove_spaces(string: &str) -> String {
+            string.replace(" ", "")
+        }
 
-        let number = s.next().ok_or(ParseMonkeyError)?;
+        fn is_alphabetic(string: &str) -> bool {
+            for ch in string.chars() {
+                if !ch.is_alphabetic() {
+                    return false;
+                }
+            }
+            true
+        }
 
-        let number = match number.parse::<i32>() {
-            Ok(number) => number,
-            Err(_) => return Err(ParseMonkeyError),
+        //  Operation: new = old + 3
+        let s: Vec<&str> = s.split("=").collect();
+
+        let equation = s.get(1).ok_or(ParseMonkeyError)?;
+        let equation = remove_spaces(equation);
+
+        let operation = move |item: &mut Item| {
+            let ops = ['+', '-', '*', '/'];
+            let values: Vec<i32> = equation
+                .split(&ops)
+                .map(|v| {
+                    if is_alphabetic(v) {
+                        item.worry_level
+                    } else {
+                        v.trim().parse().unwrap()
+                    }
+                })
+                .collect();
+            let operands: Vec<_> = equation.matches(&ops).collect();
+
+            let (&(mut curr), values) = values.split_first().unwrap();
+            for (op, &value) in operands.into_iter().zip(values) {
+                match op {
+                    "+" => curr = curr + value,
+                    "-" => curr = curr - value,
+                    "*" => curr = curr * value,
+                    "/" => curr = curr / value,
+                    _ => unreachable!(),
+                }
+            }
+
+            item.worry_level = curr.div(3);
         };
 
-        let operation = s.next().ok_or(ParseMonkeyError)?;
-
-        let add_operation = Box::new(move |item: &mut Item| {
-            item.worry_level += number;
-            item.worry_level = item.worry_level.div(3);
-        });
-
-        let multiply_operation = Box::new(move |item: &mut Item| {
-            item.worry_level *= number;
-            item.worry_level = item.worry_level.div(3);
-        });
-
-        match operation {
-            "+" => return Ok(add_operation),
-            "*" => return Ok(multiply_operation),
-            _ => return Err(ParseMonkeyError),
-        }
+        Ok(Box::new(operation))
     }
 
     fn throw_to_monkey_id(s: &mut Lines) -> Result<Box<dyn Fn(&Item) -> i32>, ParseMonkeyError> {
@@ -257,6 +279,23 @@ fn main() {
 mod tests {
     use super::*;
 
+    #[test]
+    fn remove_spaces() {
+        fn remove_spaces(string: &str) -> String {
+            string.replace(" ", "")
+        }
+
+        let s = "  Operation: new = old + 3";
+
+        //  Operation: new = old + 3
+        let s: Vec<&str> = s.split("=").collect();
+
+        let operation = s[1];
+
+        let operation = remove_spaces(operation);
+
+        assert_eq!(operation, "old+3");
+    }
     #[test]
     fn round_down() {
         let dividend = 1862;
