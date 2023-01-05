@@ -110,6 +110,33 @@ impl StringMonkeyParser {
     }
 
     fn operation(s: &str) -> Result<Box<dyn Fn(&mut Item)>, ParseMonkeyError> {
+        let mut s = s.split_whitespace().rev();
+
+        let number = s.next().ok_or(ParseMonkeyError)?;
+
+        let number = match number.parse::<i32>() {
+            Ok(number) => number,
+            Err(_) => return Err(ParseMonkeyError),
+        };
+
+        let operation = s.next().ok_or(ParseMonkeyError)?;
+
+        let add_operation = Box::new(move |item: &mut Item| {
+            item.worry_level += number;
+            item.worry_level = item.worry_level.div(3);
+        });
+
+        let multiply_operation = Box::new(move |item: &mut Item| {
+            item.worry_level *= number;
+            item.worry_level = item.worry_level.div(3);
+        });
+
+        match operation {
+            "+" => return Ok(add_operation),
+            "*" => return Ok(multiply_operation),
+            _ => return Err(ParseMonkeyError),
+        }
+    }
         todo!()
     }
 }
@@ -200,8 +227,38 @@ mod tests {
     use super::*;
 
     #[test]
-    fn parse_operation() {
-        // StringMonkeyParser::operation(s);
+    fn round_down() {
+        let dividend = 1862;
+        let divisor = 3;
+
+        let result = dividend.div(divisor);
+        assert_eq!(result, 620);
+    }
+
+    #[test]
+    fn parse_multiply_operation() {
+        let operation = "Operation: new = old * 19";
+        let operation = StringMonkeyParser::operation(operation);
+
+        assert!(operation.is_ok());
+
+        let mut item = Item { worry_level: 98 };
+        operation.unwrap()(&mut item);
+
+        assert_eq!(item.worry_level, 620);
+    }
+
+    #[test]
+    fn parse_add_operation() {
+        let operation = "Operation: new = old + 6";
+        let operation = StringMonkeyParser::operation(operation);
+
+        assert!(operation.is_ok());
+
+        let mut item = Item { worry_level: 54 };
+        operation.unwrap()(&mut item);
+
+        assert_eq!(item.worry_level, 20);
     }
 
     #[test]
