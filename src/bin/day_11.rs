@@ -380,7 +380,12 @@ mod tests {
     }
 
     #[test]
-    fn monkey_throws_to_monkey() {
+    fn parsed_monkey_throws_to_monkey() {
+        todo!()
+    }
+
+    #[test]
+    fn dummy_monkey_throws_to_monkey() {
         let monkeys: Rc<RefCell<Vec<RefCell<Monkey>>>> = Rc::new(RefCell::new(Vec::new()));
 
         for _ in 0..3 {
