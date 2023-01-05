@@ -1,6 +1,6 @@
 use std::cell::RefCell;
-use std::fmt::Error;
 use std::num::ParseIntError;
+use std::ops::Div;
 use std::ptr;
 use std::rc::Rc;
 use std::str::FromStr;
@@ -137,6 +137,8 @@ impl StringMonkeyParser {
             _ => return Err(ParseMonkeyError),
         }
     }
+
+    fn throw_to_monkey_id(s: &str) -> Result<Box<dyn Fn(&Item) -> i32>, ParseMonkeyError> {
         todo!()
     }
 }
@@ -158,10 +160,13 @@ impl FromStr for Monkey {
         let starting_items = StringMonkeyParser::starting_items(starting_items)?;
 
         let operation = s.next().ok_or(ParseMonkeyError)?;
+        let operation = StringMonkeyParser::operation(operation)?;
+
+        let throw_to_monkey_id = s.next().ok_or(ParseMonkeyError)?;
 
         Ok(Monkey {
             items: starting_items,
-            operation: Box::new(|item| ()),
+            operation,
             throw_to_monkey_id: Box::new(|item| 69),
             friends: Rc::new(RefCell::new(vec![])),
         })
