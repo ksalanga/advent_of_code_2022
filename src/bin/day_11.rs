@@ -1,71 +1,15 @@
 use core::str::Lines;
 use std::cell::RefCell;
+use std::fs;
 use std::num::ParseIntError;
 use std::ops::Div;
 use std::ptr;
 use std::rc::Rc;
 use std::str::FromStr;
 
-// Parsing:
-// split the input by the blank spaces:
-// ("\n\r\n")
-
-// ex:
-
-// splitting by "\n\r\n" on input:
-
-// Monkey 0:
-//   Starting items: 79, 98
-//   Operation: new = old * 19
-//   Test: divisible by 23
-//     If true: throw to monkey 2
-//     If false: throw to monkey 3
-//
-// Monkey 1:
-//   Starting items: 54, 65, 75, 74
-//   Operation: new = old + 6
-//   Test: divisible by 19
-//     If true: throw to monkey 2
-//     If false: throw to monkey 0
-
-// gets us an array of size 2:
-// [Monkey 0: Starting items:...  , Monkey 1: Starting items:...]
-
-// Structs:
-
-// Item Struct
-// fields:
-// - worry level: i32
-
 struct Item {
     worry_level: i32,
 }
-
-// Monkey Struct
-// fields:
-// - items: Vec<Item>
-// - operation: Closure fn(&mut Item)
-// - test: Closure fn(&Item) -> bool
-// - throw: Closure fn(test Closure, Item, &Vec<Monkey>) -> bool
-// - friends: &Vec<&Monkey>
-
-// methods:
-// - new(behavior: &str, friends: &mut Vec<&Monkey>) -> Monkey
-//      - get the behavior.lines()
-//      - get starting items in behavior line 1 (Starting items:)
-//      - create operation closure in behavior line 2: (either * or +) and then / 3 rounded down
-//      - create test closure in behavior line 3: closure fn = Item.value % parsed_num == 0
-//      - get monkey_true_index = line 4
-//      - get monkey_false_index = line 5
-//      - create throw closure:
-//          - if test closure true: add Item to Vec[monkey_true_index]
-//          - else: add Item to Vec[monkey_false_index]
-//      - friends vector is a reference to the friends input parameter
-
-// - inspect_items(&mut self)
-//      - for each item in items:
-//          - self.operation(&mut Item)
-//          - self.throw(self.test, Item, self.friends)
 
 struct Monkey {
     items: Vec<Item>,
@@ -281,13 +225,92 @@ impl Monkey {
     }
 }
 
+fn spawn_monkeys() -> Rc<RefCell<Vec<RefCell<Monkey>>>> {
+    let file_path_from_src = "./inputs/day_11/example.txt";
+    let monkeys: String = fs::read_to_string(file_path_from_src).unwrap();
+
+    let monkey_strings: Vec<&str> = monkeys.split("\n\n").collect();
+
+    let monkeys: Rc<RefCell<Vec<RefCell<Monkey>>>> = Rc::new(RefCell::new(Vec::new()));
+
+    for monkey_string in monkey_strings {
+        let mut monkey = monkey_string.parse::<Monkey>().unwrap();
+
+        monkey.friends = Rc::clone(&monkeys);
+
+        monkeys.borrow_mut().push(RefCell::new(monkey));
+    }
+
+    monkeys
+}
+
 fn main() {
-    todo!()
+    let monkeys = spawn_monkeys();
+
+    for round in 0..20 {
+        for monkey in monkeys.borrow().iter() {
+            monkey.borrow_mut().inspect_and_throw_all_items();
+        }
+    }
+
+    let mut highest_monkey_inspections: Vec<usize> = Vec::new();
+
+    for monkey in monkeys.borrow().iter() {
+        highest_monkey_inspections.push(monkey.borrow().inspection_count);
+    }
+
+    highest_monkey_inspections.sort();
+    highest_monkey_inspections.reverse();
+
+    let monkey_business = highest_monkey_inspections[0] * highest_monkey_inspections[1];
+
+    println!("monkey business: {}", monkey_business);
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn split_by_empty_space_line() {
+        let file_path_from_src = "./inputs/day_11/input.txt";
+        let monkeys: String = fs::read_to_string(file_path_from_src).unwrap();
+
+        let monkey_strings: Vec<&str> = monkeys.split("\n\n").collect();
+
+        //     let input = "Monkey 0:
+        //     Starting items: 79, 98
+        //     Operation: new = old * 19
+        //     Test: divisible by 23
+        //       If true: throw to monkey 2
+        //       If false: throw to monkey 3
+
+        //   Monkey 1:
+        //     Starting items: 54, 65, 75, 74
+        //     Operation: new = old + 6
+        //     Test: divisible by 19
+        //       If true: throw to monkey 2
+        //       If false: throw to monkey 0
+
+        //   Monkey 2:
+        //     Starting items: 79, 60, 97
+        //     Operation: new = old * old
+        //     Test: divisible by 13
+        //       If true: throw to monkey 1
+        //       If false: throw to monkey 3
+
+        //   Monkey 3:
+        //     Starting items: 74
+        //     Operation: new = old + 3
+        //     Test: divisible by 17
+        //       If true: throw to monkey 0
+        //       If false: throw to monkey 1
+        //   ";
+
+        let output: Vec<&str> = monkeys.split("\n\n").collect();
+
+        assert_eq!(output.len(), 4);
+    }
 
     #[test]
     fn remove_spaces() {
