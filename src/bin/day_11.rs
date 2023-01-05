@@ -1,3 +1,4 @@
+use core::str::Lines;
 use std::cell::RefCell;
 use std::num::ParseIntError;
 use std::ops::Div;
@@ -138,8 +139,33 @@ impl StringMonkeyParser {
         }
     }
 
-    fn throw_to_monkey_id(s: &str) -> Result<Box<dyn Fn(&Item) -> i32>, ParseMonkeyError> {
-        todo!()
+    fn throw_to_monkey_id(s: &mut Lines) -> Result<Box<dyn Fn(&Item) -> i32>, ParseMonkeyError> {
+        let mod_by = s.next().ok_or(ParseMonkeyError)?;
+        let mod_by = Self::last_number_in_string(&mod_by)?;
+
+        let true_monkey_index = s.next().ok_or(ParseMonkeyError)?;
+        let true_monkey_index = Self::last_number_in_string(&true_monkey_index)?;
+
+        let false_monkey_index = s.next().ok_or(ParseMonkeyError)?;
+        let false_monkey_index = Self::last_number_in_string(&false_monkey_index)?;
+
+        Ok(Box::new(move |item: &Item| {
+            if item.worry_level % mod_by == 0 {
+                true_monkey_index
+            } else {
+                false_monkey_index
+            }
+        }))
+    }
+
+    fn last_number_in_string(s: &str) -> Result<i32, ParseMonkeyError> {
+        let mut s = s.split_whitespace().rev();
+        let s = s.next().ok_or(ParseMonkeyError)?;
+
+        return match s.parse::<i32>() {
+            Ok(number) => Ok(number),
+            Err(_) => return Err(ParseMonkeyError),
+        };
     }
 }
 
@@ -162,12 +188,12 @@ impl FromStr for Monkey {
         let operation = s.next().ok_or(ParseMonkeyError)?;
         let operation = StringMonkeyParser::operation(operation)?;
 
-        let throw_to_monkey_id = s.next().ok_or(ParseMonkeyError)?;
+        let throw_to_monkey_id = StringMonkeyParser::throw_to_monkey_id(&mut s)?;
 
         Ok(Monkey {
             items: starting_items,
             operation,
-            throw_to_monkey_id: Box::new(|item| 69),
+            throw_to_monkey_id,
             friends: Rc::new(RefCell::new(vec![])),
         })
     }
@@ -238,6 +264,46 @@ mod tests {
 
         let result = dividend.div(divisor);
         assert_eq!(result, 620);
+    }
+
+    #[test]
+    fn parse_throw_to_true_monkey_id_operation() {
+        let monkey_2_throw_operations = "  Test: divisible by 13
+        If true: throw to monkey 1
+        If false: throw to monkey 3";
+
+        let mut monkey_2_throw_operations = monkey_2_throw_operations.lines();
+
+        let throw_to_monkey_id =
+            StringMonkeyParser::throw_to_monkey_id(&mut monkey_2_throw_operations);
+
+        assert!(throw_to_monkey_id.is_ok());
+
+        let monkey_2_item = Item { worry_level: 2080 };
+
+        let throw_to_monkey_id = throw_to_monkey_id.unwrap()(&monkey_2_item);
+
+        assert_eq!(throw_to_monkey_id, 1);
+    }
+
+    #[test]
+    fn parse_throw_to_false_monkey_id_operation() {
+        let monkey_2_throw_operations = "  Test: divisible by 13
+        If true: throw to monkey 1
+        If false: throw to monkey 3";
+
+        let mut monkey_2_throw_operations = monkey_2_throw_operations.lines();
+
+        let throw_to_monkey_id =
+            StringMonkeyParser::throw_to_monkey_id(&mut monkey_2_throw_operations);
+
+        assert!(throw_to_monkey_id.is_ok());
+
+        let monkey_2_item = Item { worry_level: 1200 };
+
+        let throw_to_monkey_id = throw_to_monkey_id.unwrap()(&monkey_2_item);
+
+        assert_eq!(throw_to_monkey_id, 3);
     }
 
     #[test]
