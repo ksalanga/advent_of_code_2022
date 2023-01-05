@@ -76,35 +76,44 @@ struct Monkey {
 #[derive(Debug, PartialEq, Eq)]
 struct ParseMonkeyError;
 
+// Functions takes in strings for a monkey's behavior:
+// ex: starting_items, operation,
+// and parse it to give the respective fields needed for a Monkey Struct
+struct StringMonkeyParser;
+
+impl StringMonkeyParser {
+    fn starting_items(s: &str) -> Result<Vec<Item>, ParseMonkeyError> {
+        //   Starting items: 79, 98
+        let s: Vec<&str> = s.split(':').collect();
+
+        let s = s.get(1).ok_or(ParseMonkeyError)?;
+
+        let s: Result<Vec<i32>, ParseIntError> = s
+            .split(|c: char| c.is_whitespace() || c == ',')
+            .filter(|s| !s.is_empty())
+            .map(|worry_level| worry_level.parse::<i32>())
+            .collect();
+
+        let s = match s {
+            Ok(s) => s,
+            Err(_) => return Err(ParseMonkeyError),
+        };
+
+        let s = s
+            .iter()
+            .map(|worry_level| Item {
+                worry_level: *worry_level,
+            })
+            .collect();
+
+        Ok(s)
+    }
+
+
 impl FromStr for Monkey {
     type Err = ParseMonkeyError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        fn parse_starting_items(s: &str) -> Result<Vec<Item>, ParseMonkeyError> {
-            let s: Vec<&str> = s.split(':').collect();
-
-            let s = s.get(1).ok_or(ParseMonkeyError)?;
-
-            let s: Result<Vec<i32>, ParseIntError> = s
-                .split(|c: char| c.is_whitespace() || c == ',')
-                .filter(|s| !s.is_empty())
-                .map(|worry_level| worry_level.parse::<i32>())
-                .collect();
-
-            let s = match s {
-                Ok(s) => s,
-                Err(_) => return Err(ParseMonkeyError),
-            };
-
-            let s = s
-                .iter()
-                .map(|worry_level| Item {
-                    worry_level: *worry_level,
-                })
-                .collect();
-
-            Ok(s)
-        }
         // Monkey 0:
         //   Starting items: 79, 98
         //   Operation: new = old * 19
@@ -115,7 +124,7 @@ impl FromStr for Monkey {
         s.next();
 
         let starting_items = s.next().ok_or(ParseMonkeyError)?;
-        let starting_items = parse_starting_items(starting_items)?;
+        let starting_items = StringMonkeyParser::starting_items(starting_items)?;
 
         let operation = s.next().ok_or(ParseMonkeyError)?;
 
