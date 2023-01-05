@@ -452,26 +452,24 @@ mod tests {
 
         let monkeys: Rc<RefCell<Vec<RefCell<Monkey>>>> = Rc::new(RefCell::new(Vec::new()));
 
-        let mut monkey = Monkey::from_str(monkey_2);
+        for monkey_string in monkey_strings {
+            let mut monkey = monkey_string.parse::<Monkey>().unwrap();
 
-        assert!(monkey.is_ok());
-        // for monkey_string in monkey_strings {
+            monkey.friends = Rc::clone(&monkeys);
 
-        //     monkey.friends = Rc::clone(&monkeys);
+            monkeys.borrow_mut().push(RefCell::new(monkey));
+        }
 
-        //     monkeys.borrow_mut().push(RefCell::new(monkey));
-        // }
+        let monkey_0 = &monkeys.borrow()[0];
 
-        // let monkey_0 = &monkeys.borrow()[0];
+        monkey_0.borrow_mut().throw();
 
-        // monkey_0.borrow_mut().throw();
+        assert_eq!(monkey_0.borrow().items.len(), 1);
 
-        // assert_eq!(monkey_0.borrow().items.len(), 1);
+        let monkey_3 = &monkeys.borrow()[3];
 
-        // let monkey_3 = &monkeys.borrow()[3];
-
-        // assert_eq!(monkey_3.borrow().items.len(), 2);
-        // assert_eq!(monkey_3.borrow().items[1].worry_level, 500);
+        assert_eq!(monkey_3.borrow().items.len(), 2);
+        assert_eq!(monkey_3.borrow().items[1].worry_level, 500);
     }
 
     #[test]
