@@ -381,7 +381,58 @@ mod tests {
 
     #[test]
     fn parsed_monkey_throws_to_monkey() {
-        todo!()
+        let monkey_0 = "Monkey 0:
+        Starting items: 79, 98
+        Operation: new = old * 19
+        Test: divisible by 23
+          If true: throw to monkey 2
+          If false: throw to monkey 3";
+
+        let monkey_1 = "Monkey 1:
+        Starting items: 54, 65, 75, 74
+        Operation: new = old + 6
+        Test: divisible by 19
+          If true: throw to monkey 2
+          If false: throw to monkey 0";
+
+        let monkey_2 = "Monkey 2:
+        Starting items: 79, 60, 97
+        Operation: new = old * old
+        Test: divisible by 13
+          If true: throw to monkey 1
+          If false: throw to monkey 3";
+
+        let monkey_3 = "Monkey 3:
+        Starting items: 74
+        Operation: new = old + 3
+        Test: divisible by 17
+          If true: throw to monkey 0
+          If false: throw to monkey 1";
+
+        let monkey_strings = vec![monkey_0, monkey_1, monkey_2, monkey_3];
+
+        let monkeys: Rc<RefCell<Vec<RefCell<Monkey>>>> = Rc::new(RefCell::new(Vec::new()));
+
+        let mut monkey = Monkey::from_str(monkey_2);
+
+        assert!(monkey.is_ok());
+        // for monkey_string in monkey_strings {
+
+        //     monkey.friends = Rc::clone(&monkeys);
+
+        //     monkeys.borrow_mut().push(RefCell::new(monkey));
+        // }
+
+        // let monkey_0 = &monkeys.borrow()[0];
+
+        // monkey_0.borrow_mut().throw();
+
+        // assert_eq!(monkey_0.borrow().items.len(), 1);
+
+        // let monkey_3 = &monkeys.borrow()[3];
+
+        // assert_eq!(monkey_3.borrow().items.len(), 2);
+        // assert_eq!(monkey_3.borrow().items[1].worry_level, 500);
     }
 
     #[test]
