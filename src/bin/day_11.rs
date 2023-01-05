@@ -109,6 +109,10 @@ impl StringMonkeyParser {
         Ok(s)
     }
 
+    fn operation(s: &str) -> Result<Box<dyn Fn(&mut Item)>, ParseMonkeyError> {
+        todo!()
+    }
+}
 
 impl FromStr for Monkey {
     type Err = ParseMonkeyError;
@@ -194,6 +198,11 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn parse_operation() {
+        // StringMonkeyParser::operation(s);
+    }
 
     #[test]
     fn split() {
