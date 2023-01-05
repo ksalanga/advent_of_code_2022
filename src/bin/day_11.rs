@@ -539,6 +539,126 @@ mod tests {
     }
 
     #[test]
+    fn monkeys_throw_all_items_for_20_rounds() {
+        let monkey_0 = "Monkey 0:
+        Starting items: 79, 98
+        Operation: new = old * 19
+        Test: divisible by 23
+          If true: throw to monkey 2
+          If false: throw to monkey 3";
+
+        let monkey_1 = "Monkey 1:
+        Starting items: 54, 65, 75, 74
+        Operation: new = old + 6
+        Test: divisible by 19
+          If true: throw to monkey 2
+          If false: throw to monkey 0";
+
+        let monkey_2 = "Monkey 2:
+        Starting items: 79, 60, 97
+        Operation: new = old * old
+        Test: divisible by 13
+          If true: throw to monkey 1
+          If false: throw to monkey 3";
+
+        let monkey_3 = "Monkey 3:
+        Starting items: 74
+        Operation: new = old + 3
+        Test: divisible by 17
+          If true: throw to monkey 0
+          If false: throw to monkey 1";
+
+        let monkey_strings = vec![monkey_0, monkey_1, monkey_2, monkey_3];
+
+        let monkeys: Rc<RefCell<Vec<RefCell<Monkey>>>> = Rc::new(RefCell::new(Vec::new()));
+
+        for monkey_string in monkey_strings {
+            let mut monkey = monkey_string.parse::<Monkey>().unwrap();
+
+            monkey.friends = Rc::clone(&monkeys);
+
+            monkeys.borrow_mut().push(RefCell::new(monkey));
+        }
+
+        for round in 0..20 {
+            for monkey in monkeys.borrow().iter() {
+                monkey.borrow_mut().inspect_and_throw_all_items();
+            }
+        }
+
+        let monkey_inspection_counts: Vec<usize> = vec![101, 95, 7, 105];
+
+        let mut i = 0;
+
+        for monkey in monkeys.borrow().iter() {
+            assert_eq!(
+                monkey.borrow().inspection_count,
+                monkey_inspection_counts[i]
+            );
+            i += 1;
+        }
+    }
+
+    #[test]
+    fn monkeys_throw_all_items_for_1_round() {
+        let monkey_0 = "Monkey 0:
+        Starting items: 79, 98
+        Operation: new = old * 19
+        Test: divisible by 23
+          If true: throw to monkey 2
+          If false: throw to monkey 3";
+
+        let monkey_1 = "Monkey 1:
+        Starting items: 54, 65, 75, 74
+        Operation: new = old + 6
+        Test: divisible by 19
+          If true: throw to monkey 2
+          If false: throw to monkey 0";
+
+        let monkey_2 = "Monkey 2:
+        Starting items: 79, 60, 97
+        Operation: new = old * old
+        Test: divisible by 13
+          If true: throw to monkey 1
+          If false: throw to monkey 3";
+
+        let monkey_3 = "Monkey 3:
+        Starting items: 74
+        Operation: new = old + 3
+        Test: divisible by 17
+          If true: throw to monkey 0
+          If false: throw to monkey 1";
+
+        let monkey_strings = vec![monkey_0, monkey_1, monkey_2, monkey_3];
+
+        let monkeys: Rc<RefCell<Vec<RefCell<Monkey>>>> = Rc::new(RefCell::new(Vec::new()));
+
+        for monkey_string in monkey_strings {
+            let mut monkey = monkey_string.parse::<Monkey>().unwrap();
+
+            monkey.friends = Rc::clone(&monkeys);
+
+            monkeys.borrow_mut().push(RefCell::new(monkey));
+        }
+
+        for monkey in monkeys.borrow().iter() {
+            monkey.borrow_mut().inspect_and_throw_all_items();
+        }
+
+        let monkey_inspection_counts: Vec<usize> = vec![2, 4, 3, 5];
+
+        let mut i = 0;
+
+        for monkey in monkeys.borrow().iter() {
+            assert_eq!(
+                monkey.borrow().inspection_count,
+                monkey_inspection_counts[i]
+            );
+            i += 1;
+        }
+    }
+
+    #[test]
     fn dummy_monkey_throws_to_monkey() {
         let monkeys: Rc<RefCell<Vec<RefCell<Monkey>>>> = Rc::new(RefCell::new(Vec::new()));
 
