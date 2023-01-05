@@ -72,6 +72,7 @@ struct Monkey {
     operation: Box<dyn Fn(&mut Item)>,
     throw_to_monkey_id: Box<dyn Fn(&Item) -> i32>,
     friends: Rc<RefCell<Vec<RefCell<Monkey>>>>,
+    inspection_count: usize,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -217,6 +218,7 @@ impl FromStr for Monkey {
             operation,
             throw_to_monkey_id,
             friends: Rc::new(RefCell::new(vec![])),
+            inspection_count: 0,
         })
     }
 }
@@ -243,6 +245,7 @@ impl Monkey {
             operation: Box::new(operation),
             throw_to_monkey_id: Box::new(throw_to_monkey_id),
             friends: Rc::clone(&friends),
+            inspection_count: 0,
         }
     }
 
