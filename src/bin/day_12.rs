@@ -152,6 +152,22 @@ fn parse_mountain(s: &str) -> Vec<Vec<char>> {
     result
 }
 
+fn find_starting_position(mountain: &mut Vec<Vec<char>>) -> Position {
+    for height in 0..mountain.len() {
+        for width in 0..mountain[0].len() {
+            if mountain[height][width] == 'S' {
+                mountain[height][width] = 'a';
+                return Position {
+                    y: height as i32,
+                    x: width as i32,
+                };
+            }
+        }
+    }
+
+    Position { x: 0, y: 0 }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -173,9 +189,23 @@ mod tests {
 
         let mountain = parse_mountain(mountain);
 
-        let current_position = Position { x: 0, y: 0 };
-        let shortest_path = step_counts(None, current_position, &mountain);
+        let starting_position = Position { x: 0, y: 0 };
+        let shortest_path = step_counts(None, starting_position, &mountain);
 
         assert_eq!(shortest_path, None);
+    }
+
+    #[test]
+    fn starting_position() {
+        let mountain = "bS\nbE";
+
+        let mut mountain = parse_mountain(mountain);
+        let starting_position = find_starting_position(&mut mountain);
+
+        let shortest_path = step_counts(None, starting_position, &mountain);
+
+        assert_eq!(shortest_path, Some(1));
+        assert_eq!(starting_position, Position { x: 1, y: 0 });
+        assert_eq!(mountain[0][1], 'a');
     }
 }
