@@ -132,6 +132,7 @@ fn shortest_path_to_highest_point(
         if seen_positions.contains_key(&neighbor) {
             neighbor_paths.push(*seen_positions.get(&neighbor).unwrap());
         } else {
+            // really think hard about how we're getting number of steps from a specific position.
             let neighbor_shortest_path_to_highest_point = shortest_path_to_highest_point(
                 steps + 1,
                 path,
