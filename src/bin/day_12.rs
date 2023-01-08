@@ -1,5 +1,8 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fs;
+use std::hash::Hash;
 use std::str::FromStr;
 
 #[derive(Debug, Eq, Hash, PartialEq, Clone, Copy)]
@@ -11,7 +14,6 @@ struct Position {
 #[derive(Debug)]
 struct HeightMap {
     map: Vec<Vec<char>>,
-    shortest_path_map: Vec<Vec<Option<i32>>>,
     starting_point: Position,
     highest_point: Position,
 }
@@ -93,7 +95,8 @@ fn shortest_path_to_highest_point(
     steps: usize,
     path: HashSet<Position>,
     current: Position,
-    heightmap: &HeightMap,
+    heightmap: &mut HeightMap,
+    seen_positions: &mut HashMap<Position, Option<usize>>,
 ) -> Option<usize> {
     if current == heightmap.highest_point {
         return Some(steps);
@@ -120,19 +123,25 @@ fn shortest_path_to_highest_point(
         }
     }
 
-    let mut neighbor_paths = vec![];
+    let mut neighbor_paths: Vec<Option<usize>> = vec![];
 
     for neighbor in neighbors_to_explore {
         let mut path = path.clone();
         path.insert(current);
 
-        // check if a value in shortest_path_map exists here
-        neighbor_paths.push(shortest_path_to_highest_point(
-            steps + 1,
-            path,
-            neighbor,
-            heightmap,
-        ));
+        if seen_positions.contains_key(&neighbor) {
+            neighbor_paths.push(*seen_positions.get(&neighbor).unwrap());
+        } else {
+            let neighbor_shortest_path_to_highest_point = shortest_path_to_highest_point(
+                steps + 1,
+                path,
+                neighbor,
+                heightmap,
+                seen_positions,
+            );
+
+            neighbor_paths.push(neighbor_shortest_path_to_highest_point);
+        }
     }
 
     let mut neighbor_paths: Vec<usize> = neighbor_paths
@@ -142,25 +151,33 @@ fn shortest_path_to_highest_point(
         .collect();
 
     if neighbor_paths.is_empty() {
-        // give the shortest_path_map a negative number. *DEAD END*.
+        seen_positions.insert(current, None);
         return None;
     }
 
     // put the shortest of neighbor_paths into the shortest_path_map.
     neighbor_paths.sort();
+    seen_positions.insert(current, Some(neighbor_paths[0]));
     return Some(neighbor_paths[0]);
 }
 
 fn main() {
-    let file_path_from_src = "./inputs/day_12/input.txt";
+    let file_path_from_src = "./inputs/day_12/example.txt";
     let mountain: String = fs::read_to_string(file_path_from_src).unwrap();
 
-    let heightmap: HeightMap = mountain.parse().unwrap();
+    let mut heightmap: HeightMap = mountain.parse().unwrap();
 
     let path = HashSet::new();
 
-    let shortest_path_to_highest_point =
-        shortest_path_to_highest_point(0, path, heightmap.starting_point, &heightmap);
+    let mut seen_positions = HashMap::new();
+
+    let shortest_path_to_highest_point = shortest_path_to_highest_point(
+        0,
+        path,
+        heightmap.starting_point,
+        &mut heightmap,
+        &mut seen_positions,
+    );
 
     println!(
         "shortest path to mountain top: {}",
@@ -170,6 +187,7 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     #[test]
     fn find_shortest_path() {
@@ -178,11 +196,31 @@ mod tests {
 
         let path = HashSet::new();
 
+        let mut seen_positions = HashMap::new();
+
         let starting_point = Position { row: 0, col: 0 };
 
         heightmap.map[0][0] = 'x';
 
-        let shortest_path = shortest_path_to_highest_point(0, path, starting_point, &heightmap);
+        let shortest_path = shortest_path_to_highest_point(
+            0,
+            path,
+            starting_point,
+            &mut heightmap,
+            &mut seen_positions,
+        );
         assert_eq!(shortest_path, Some(2));
+    }
+
+    #[test]
+    fn map() {
+        let mut map: HashMap<Position, i32> = HashMap::new();
+
+        let p0 = Position { row: 0, col: 0 };
+        let p1 = Position { row: 0, col: 1 };
+        map.insert(p0, 0);
+
+        assert!(!map.contains_key(&p1));
+        assert!(map.contains_key(&p0));
     }
 }
