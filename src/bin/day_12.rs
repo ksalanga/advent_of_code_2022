@@ -1,171 +1,161 @@
+use std::collections::HashSet;
+use std::fs;
+use std::str::FromStr;
+
 #[derive(Debug, Eq, Hash, PartialEq, Clone, Copy)]
 struct Position {
-    x: i32,
-    y: i32,
+    row: i32,
+    col: i32,
 }
 
-#[derive(Clone, Copy)]
-struct PreviousStep {
-    position: Position,
-    height: char,
-    count: u32,
+#[derive(Debug)]
+struct HeightMap {
+    map: Vec<Vec<char>>,
+    starting_point: Position,
+    highest_point: Position,
 }
 
-// from any current position in the mountain,
-// we take a single step (increment our step count)
+impl HeightMap {
+    fn out_of_bounds(&self, position: &Position) -> bool {
+        let heightmap_rows = self.map.len() as i32;
+        let heightmap_cols = self.map[0].len() as i32;
 
-// we recurse through our neighbors that aren't ones that we came from.
-//      (if we allow going through where we came from we could infinitely recurse going back and forth between those two spots)
-// we provide our neighbor our current height and coords into their previous height and coords part of the recursive function.
+        let r = position.row;
+        let c = position.col;
 
-// after we got the amount of steps from all of our valid returned neighbors,
-// take the neighbor with the least amount of steps.
-// return to sender.
-
-// we stop recursing from a current position based on the condition:
-// - we are out of bounds from the coordinates
-// - we are a height difference greater than 1 from our previous neighbor
-// return None
-
-// we stop recursing from a current position based on the condition:
-// height == E
-// return Some(the previous step count).
-
-// we don't recurse through a neighbor from a curent position based on these conditions:
-// - previous neighbor's coordinates
-
-// fn step(prev: Option<PreviousStep>, current_position: Position, mountain: &Vec<Vec<char>>) -> Option<u32>
-fn step_counts(
-    previous_step: Option<PreviousStep>,
-    current_position: Position,
-    mountain: &Vec<Vec<char>>,
-) -> Option<u32> {
-    // mountain grid width = columns
-    let mountain_width = mountain[0].len() as i32;
-    // mountain grid height = rows
-    let mountain_height = mountain.len() as i32;
-
-    // x is width (going left to right of mountain grid)
-    let x = current_position.x;
-
-    // y is height (going up and down of mountain grid)
-    let y = current_position.y;
-
-    if x < 0 || x >= mountain_width || y < 0 || y >= mountain_height {
-        return None;
+        r < 0 || r >= heightmap_rows || c < 0 || c >= heightmap_cols
     }
 
-    if mountain[y as usize][x as usize] == 'E' {
-        return Some(previous_step.unwrap().count);
-    }
-
-    if let Some(previous_step) = &previous_step {
-        let previous_height =
-            mountain[previous_step.position.y as usize][previous_step.position.x as usize] as u32;
-
-        let current_height =
-            mountain[current_position.y as usize][current_position.x as usize] as u32;
-
-        if current_height.abs_diff(previous_height) > 1 {
-            return None;
-        }
-    }
-
-    let previous_step_count = match &previous_step {
-        Some(previous_step) => previous_step.count,
-        None => 0,
-    };
-
-    let current_step_count = previous_step_count + 1;
-
-    let mut valid_steps = Vec::new();
-
-    let current_step = PreviousStep {
-        position: current_position,
-        height: mountain[current_position.y as usize][current_position.x as usize],
-        count: current_step_count,
-    };
-
-    let mut next_positions: Vec<Position> = Vec::new();
-
-    for y in vec![-1, 1] {
-        let next_position = Position {
-            x: current_position.x,
-            y: current_position.y + y,
-        };
-
-        if let Some(previous_step) = &previous_step {
-            if next_position == previous_step.position {
-                continue;
-            }
+    fn height_difference(&self, current: &Position, other: &Position) -> u32 {
+        if self.out_of_bounds(current) || self.out_of_bounds(other) {
+            return 10000;
         }
 
-        next_positions.push(next_position);
+        let current_height = self.map[current.row as usize][current.col as usize] as u32;
+        let other_height = self.map[other.row as usize][other.col as usize] as u32;
+
+        current_height.abs_diff(other_height)
     }
-
-    for x in vec![-1, 1] {
-        let next_position = Position {
-            x: current_position.x + x,
-            y: current_position.y,
-        };
-
-        if let Some(previous_step) = &previous_step {
-            if next_position == previous_step.position {
-                continue;
-            }
-        }
-
-        next_positions.push(next_position);
-    }
-
-    for next_position in next_positions {
-        // println!(
-        //     "Current Position: {:?}, Next Position: {:?}",
-        //     current_position, next_position
-        // );
-        if let Some(step_count) = step_counts(Some(current_step), next_position, mountain) {
-            valid_steps.push(step_count);
-        }
-    }
-
-    if valid_steps.is_empty() {
-        return None;
-    }
-
-    valid_steps.sort();
-    return Some(valid_steps[0]);
 }
 
-fn main() {
-    todo!()
-}
+#[derive(Debug)]
+struct HeightMapError;
 
-fn parse_mountain(s: &str) -> Vec<Vec<char>> {
-    let mut result = Vec::new();
-    let lines: Vec<&str> = s.lines().collect();
-
-    for line in lines {
-        let chars: Vec<char> = line.chars().collect();
-        result.push(chars);
-    }
-
-    result
-}
-
-fn find_starting_position(mountain: &mut Vec<Vec<char>>) -> Position {
-    for height in 0..mountain.len() {
-        for width in 0..mountain[0].len() {
-            if mountain[height][width] == 'S' {
-                mountain[height][width] = 'a';
+fn find_letter(letter: char, heightmap: &Vec<Vec<char>>) -> Position {
+    for row in 0..heightmap.len() {
+        for col in 0..heightmap[0].len() {
+            if heightmap[row][col] == letter {
                 return Position {
-                    y: height as i32,
-                    x: width as i32,
+                    row: row as i32,
+                    col: col as i32,
                 };
             }
         }
     }
 
-    Position { x: 0, y: 0 }
+    Position { row: 0, col: 0 }
+}
+
+impl FromStr for HeightMap {
+    type Err = HeightMapError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut map = Vec::new();
+        let lines: Vec<&str> = s.lines().collect();
+
+        for line in lines {
+            let chars: Vec<char> = line.chars().collect();
+            map.push(chars);
+        }
+
+        let starting_point = find_letter('S', &map);
+        let highest_point = find_letter('E', &map);
+
+        map[starting_point.row as usize][starting_point.col as usize] = 'a';
+        map[highest_point.row as usize][highest_point.col as usize] = 'z';
+
+        Ok(HeightMap {
+            map,
+            starting_point,
+            highest_point,
+        })
+    }
+}
+
+fn shortest_path_to_highest_point(
+    steps: usize,
+    path: HashSet<Position>,
+    current: Position,
+    heightmap: &HeightMap,
+) -> Option<usize> {
+    if current == heightmap.highest_point {
+        return Some(steps);
+    }
+
+    let r = current.row;
+    let c = current.col;
+
+    let up = Position { row: r + 1, col: c };
+    let down = Position { row: r - 1, col: c };
+    let left = Position { row: r, col: c - 1 };
+    let right = Position { row: r, col: c + 1 };
+
+    let neighbors = vec![up, down, left, right];
+
+    let mut neighbors_to_explore = vec![];
+
+    for neighbor in neighbors {
+        if !heightmap.out_of_bounds(&neighbor)
+            && !path.contains(&neighbor)
+            && heightmap.height_difference(&current, &neighbor) <= 1
+        {
+            neighbors_to_explore.push(neighbor);
+        }
+    }
+
+    let mut neighbor_paths = vec![];
+
+    for neighbor in neighbors_to_explore {
+        let mut path = path.clone();
+        path.insert(current);
+
+        neighbor_paths.push(shortest_path_to_highest_point(
+            steps + 1,
+            path,
+            neighbor,
+            heightmap,
+        ));
+    }
+
+    let mut neighbor_paths: Vec<usize> = neighbor_paths
+        .iter()
+        .filter(|neighbor_path_length| neighbor_path_length.is_some())
+        .map(|neighbor_path_length| neighbor_path_length.unwrap())
+        .collect();
+
+    if neighbor_paths.is_empty() {
+        return None;
+    }
+
+    neighbor_paths.sort();
+    return Some(neighbor_paths[0]);
+}
+
+fn main() {
+    let file_path_from_src = "./inputs/day_12/input.txt";
+    let mountain: String = fs::read_to_string(file_path_from_src).unwrap();
+
+    let heightmap: HeightMap = mountain.parse().unwrap();
+
+    let path = HashSet::new();
+
+    let shortest_path_to_highest_point =
+        shortest_path_to_highest_point(0, path, heightmap.starting_point, &heightmap);
+
+    println!(
+        "shortest path to mountain top: {}",
+        shortest_path_to_highest_point.unwrap()
+    );
 }
 
 #[cfg(test)]
@@ -173,39 +163,16 @@ mod tests {
     use super::*;
     #[test]
     fn find_shortest_path() {
-        let mountain = "ab\naE";
+        let mountain = "xy\nyE";
+        let mut heightmap: HeightMap = mountain.parse().unwrap();
 
-        let mountain = parse_mountain(mountain);
+        let path = HashSet::new();
 
-        let current_position = Position { x: 0, y: 0 };
-        let shortest_path = step_counts(None, current_position, &mountain);
+        let starting_point = Position { row: 0, col: 0 };
 
+        heightmap.map[0][0] = 'x';
+
+        let shortest_path = shortest_path_to_highest_point(0, path, starting_point, &heightmap);
         assert_eq!(shortest_path, Some(2));
-    }
-
-    #[test]
-    fn cant_reach_mountain_top() {
-        let mountain = "ac\ncE";
-
-        let mountain = parse_mountain(mountain);
-
-        let starting_position = Position { x: 0, y: 0 };
-        let shortest_path = step_counts(None, starting_position, &mountain);
-
-        assert_eq!(shortest_path, None);
-    }
-
-    #[test]
-    fn starting_position() {
-        let mountain = "bS\nbE";
-
-        let mut mountain = parse_mountain(mountain);
-        let starting_position = find_starting_position(&mut mountain);
-
-        let shortest_path = step_counts(None, starting_position, &mountain);
-
-        assert_eq!(shortest_path, Some(1));
-        assert_eq!(starting_position, Position { x: 1, y: 0 });
-        assert_eq!(mountain[0][1], 'a');
     }
 }
