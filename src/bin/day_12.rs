@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fs;
@@ -92,14 +91,13 @@ impl FromStr for HeightMap {
 }
 
 fn shortest_path_to_highest_point(
-    steps: usize,
     path: HashSet<Position>,
     current: Position,
     heightmap: &mut HeightMap,
     seen_positions: &mut HashMap<Position, Option<usize>>,
 ) -> Option<usize> {
     if current == heightmap.highest_point {
-        return Some(steps);
+        return Some(0);
     }
 
     let r = current.row;
@@ -112,41 +110,33 @@ fn shortest_path_to_highest_point(
 
     let neighbors = vec![up, down, left, right];
 
-    let mut neighbors_to_explore = vec![];
-
-    for neighbor in neighbors {
-        if !heightmap.out_of_bounds(&neighbor)
-            && !path.contains(&neighbor)
-            && heightmap.height_difference(&current, &neighbor) <= 1
-        {
-            neighbors_to_explore.push(neighbor);
-        }
-    }
+    let neighbors: Vec<Position> = neighbors
+        .into_iter()
+        .filter(|neighbor| {
+            !heightmap.out_of_bounds(&neighbor)
+                && !path.contains(&neighbor)
+                && heightmap.height_difference(&current, &neighbor) <= 1
+        })
+        .collect();
 
     let mut neighbor_paths: Vec<Option<usize>> = vec![];
 
-    for neighbor in neighbors_to_explore {
+    for neighbor in neighbors {
         let mut path = path.clone();
         path.insert(current);
 
         if seen_positions.contains_key(&neighbor) {
             neighbor_paths.push(*seen_positions.get(&neighbor).unwrap());
         } else {
-            // really think hard about how we're getting number of steps from a specific position.
-            let neighbor_shortest_path_to_highest_point = shortest_path_to_highest_point(
-                steps + 1,
-                path,
-                neighbor,
-                heightmap,
-                seen_positions,
-            );
+            let neighbor_shortest_path_to_highest_point =
+                shortest_path_to_highest_point(path, neighbor, heightmap, seen_positions);
 
             neighbor_paths.push(neighbor_shortest_path_to_highest_point);
         }
     }
 
     let mut neighbor_paths: Vec<usize> = neighbor_paths
-        .iter()
+        .into_iter()
         .filter(|neighbor_path_length| neighbor_path_length.is_some())
         .map(|neighbor_path_length| neighbor_path_length.unwrap())
         .collect();
@@ -158,8 +148,8 @@ fn shortest_path_to_highest_point(
 
     // put the shortest of neighbor_paths into the shortest_path_map.
     neighbor_paths.sort();
-    seen_positions.insert(current, Some(neighbor_paths[0]));
-    return Some(neighbor_paths[0]);
+    seen_positions.insert(current, Some(neighbor_paths[0] + 1));
+    return Some(neighbor_paths[0] + 1);
 }
 
 fn main() {
@@ -173,7 +163,6 @@ fn main() {
     let mut seen_positions = HashMap::new();
 
     let shortest_path_to_highest_point = shortest_path_to_highest_point(
-        0,
         path,
         heightmap.starting_point,
         &mut heightmap,
@@ -204,7 +193,6 @@ mod tests {
         heightmap.map[0][0] = 'x';
 
         let shortest_path = shortest_path_to_highest_point(
-            0,
             path,
             starting_point,
             &mut heightmap,
