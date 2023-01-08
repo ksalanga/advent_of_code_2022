@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fs;
 use std::hash::Hash;
+use std::io::Write;
 use std::str::FromStr;
 
 #[derive(Debug, Eq, Hash, PartialEq, Clone, Copy)]
@@ -38,12 +39,6 @@ impl HeightMap {
 
         current_height.abs_diff(other_height)
     }
-
-    // if shortest_path_map has a None value @ a position:
-    //      shortest_path hasn't calculated a position in the heightmap yet
-    // if shortest_path_map has Some value @ a position:
-    //      if it's negative: shortest_path @ position has been calculated but it found no paths to the highest point. dead end.
-    //      if it's positive: shortest_path @position is some shortest_path.
 }
 
 #[derive(Debug)]
@@ -97,6 +92,7 @@ fn shortest_path_to_highest_point(
     seen_positions: &mut HashMap<Position, Option<usize>>,
 ) -> Option<usize> {
     if current == heightmap.highest_point {
+        println!("Top!");
         return Some(0);
     }
 
@@ -122,6 +118,8 @@ fn shortest_path_to_highest_point(
     let mut neighbor_paths: Vec<Option<usize>> = vec![];
 
     for neighbor in neighbors {
+        // has to do with the height differences
+        // and the seen positions?
         let mut path = path.clone();
         path.insert(current);
 
@@ -146,14 +144,13 @@ fn shortest_path_to_highest_point(
         return None;
     }
 
-    // put the shortest of neighbor_paths into the shortest_path_map.
     neighbor_paths.sort();
     seen_positions.insert(current, Some(neighbor_paths[0] + 1));
     return Some(neighbor_paths[0] + 1);
 }
 
 fn main() {
-    let file_path_from_src = "./inputs/day_12/example.txt";
+    let file_path_from_src = "./inputs/day_12/input.txt";
     let mountain: String = fs::read_to_string(file_path_from_src).unwrap();
 
     let mut heightmap: HeightMap = mountain.parse().unwrap();
@@ -169,10 +166,27 @@ fn main() {
         &mut seen_positions,
     );
 
+    for seen_position in seen_positions.keys() {
+        heightmap.map[seen_position.row as usize][seen_position.col as usize] = 'X';
+    }
+
+    write_map_to_file(heightmap.map);
+
     println!(
         "shortest path to mountain top: {}",
         shortest_path_to_highest_point.unwrap()
     );
+}
+
+fn write_map_to_file(map: Vec<Vec<char>>) {
+    let mut file = fs::File::create("./outputs/day_12/output.txt").unwrap();
+
+    for row in map {
+        for ch in row {
+            file.write(&[ch as u8]).unwrap();
+        }
+        file.write(&[b'\n']).unwrap();
+    }
 }
 
 #[cfg(test)]
