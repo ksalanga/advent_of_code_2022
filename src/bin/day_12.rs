@@ -11,6 +11,7 @@ struct Position {
 #[derive(Debug)]
 struct HeightMap {
     map: Vec<Vec<char>>,
+    shortest_path_map: Vec<Vec<Option<i32>>>,
     starting_point: Position,
     highest_point: Position,
 }
@@ -36,6 +37,12 @@ impl HeightMap {
 
         current_height.abs_diff(other_height)
     }
+
+    // if shortest_path_map has a None value @ a position:
+    //      shortest_path hasn't calculated a position in the heightmap yet
+    // if shortest_path_map has Some value @ a position:
+    //      if it's negative: shortest_path @ position has been calculated but it found no paths to the highest point. dead end.
+    //      if it's positive: shortest_path @position is some shortest_path.
 }
 
 #[derive(Debug)]
@@ -119,6 +126,7 @@ fn shortest_path_to_highest_point(
         let mut path = path.clone();
         path.insert(current);
 
+        // check if a value in shortest_path_map exists here
         neighbor_paths.push(shortest_path_to_highest_point(
             steps + 1,
             path,
@@ -134,9 +142,11 @@ fn shortest_path_to_highest_point(
         .collect();
 
     if neighbor_paths.is_empty() {
+        // give the shortest_path_map a negative number. *DEAD END*.
         return None;
     }
 
+    // put the shortest of neighbor_paths into the shortest_path_map.
     neighbor_paths.sort();
     return Some(neighbor_paths[0]);
 }
