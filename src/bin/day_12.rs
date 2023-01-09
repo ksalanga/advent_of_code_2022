@@ -29,15 +29,15 @@ impl HeightMap {
         r < 0 || r >= heightmap_rows || c < 0 || c >= heightmap_cols
     }
 
-    fn height_difference(&self, current: &Position, other: &Position) -> u32 {
+    fn height_difference(&self, current: &Position, other: &Position) -> i32 {
         if self.out_of_bounds(current) || self.out_of_bounds(other) {
             return 10000;
         }
 
-        let current_height = self.map[current.row as usize][current.col as usize] as u32;
-        let other_height = self.map[other.row as usize][other.col as usize] as u32;
+        let current_height = self.map[current.row as usize][current.col as usize] as i32;
+        let other_height = self.map[other.row as usize][other.col as usize] as i32;
 
-        current_height.abs_diff(other_height)
+        other_height - current_height
     }
 }
 
@@ -170,7 +170,7 @@ fn main() {
         heightmap.map[seen_position.row as usize][seen_position.col as usize] = 'X';
     }
 
-    write_map_to_file(heightmap.map);
+    // write_map_to_file(heightmap.map);
 
     println!(
         "shortest path to mountain top: {}",
@@ -213,6 +213,78 @@ mod tests {
             &mut seen_positions,
         );
         assert_eq!(shortest_path, Some(2));
+    }
+
+    #[test]
+    fn find_shortest_path_going_down_and_up() {
+        //xyxyz
+        //NNNNN
+        let mountain = "xyxyE\nNNNNN";
+        let mut heightmap: HeightMap = mountain.parse().unwrap();
+
+        let path = HashSet::new();
+
+        let mut seen_positions = HashMap::new();
+
+        let starting_point = Position { row: 0, col: 0 };
+
+        heightmap.map[0][0] = 'x';
+
+        let shortest_path = shortest_path_to_highest_point(
+            path,
+            starting_point,
+            &mut heightmap,
+            &mut seen_positions,
+        );
+        assert_eq!(shortest_path, Some(4));
+    }
+
+    #[test]
+    fn find_shortest_path_going_up() {
+        //waabcdefghijklm
+        //xyEyxwvutsrqpon
+        let mountain = "waabcdefghijklm\nxyEyxwvutsrqpon";
+        let mut heightmap: HeightMap = mountain.parse().unwrap();
+
+        let path = HashSet::new();
+
+        let mut seen_positions = HashMap::new();
+
+        let starting_point = Position { row: 0, col: 0 };
+
+        heightmap.map[0][0] = 'w';
+
+        let shortest_path = shortest_path_to_highest_point(
+            path,
+            starting_point,
+            &mut heightmap,
+            &mut seen_positions,
+        );
+        assert_eq!(shortest_path, Some(3));
+    }
+
+    #[test]
+    fn find_shortest_path_sliding_down() {
+        //yaabcdefghijklm
+        //xyEyxwvutsrqpon
+        let mountain = "yaabcdefghijklm\nxyEyxwvutsrqpon";
+        let mut heightmap: HeightMap = mountain.parse().unwrap();
+
+        let path = HashSet::new();
+
+        let mut seen_positions = HashMap::new();
+
+        let starting_point = Position { row: 0, col: 0 };
+
+        heightmap.map[0][0] = 'y';
+
+        let shortest_path = shortest_path_to_highest_point(
+            path,
+            starting_point,
+            &mut heightmap,
+            &mut seen_positions,
+        );
+        assert_eq!(shortest_path, Some(3));
     }
 
     #[test]
