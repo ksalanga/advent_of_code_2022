@@ -1,10 +1,8 @@
-use std::cell::Cell;
-use std::cell::RefCell;
 use std::collections::HashMap;
+use std::collections::HashSet;
+use std::collections::VecDeque;
 use std::fs;
 use std::hash::Hash;
-use std::rc::Rc;
-use std::rc::Weak;
 use std::str::FromStr;
 
 #[derive(Debug, Eq, Hash, PartialEq, Clone, Copy)]
@@ -88,29 +86,70 @@ impl FromStr for HeightMap {
 }
 
 fn shortest_path_to_highest_point(heightmap: &HeightMap) -> Option<usize> {
-    // visited positions hashset
-    // <position, steps> hashmap
+    let mut steps_from_source: HashMap<Position, usize> = HashMap::new();
 
-    // initiate BFS queue
+    let mut visited: HashSet<Position> = HashSet::new();
 
-    // starting from the starting point in the heightmap:
+    let mut q: VecDeque<Position> = VecDeque::new();
 
-    // put the starting point into the queue.
-    // put the starting point into the hashmap with steps = 0.
+    let starting_point = heightmap.starting_point;
+    let highest_point = heightmap.highest_point;
 
-    // for each position in the queue:
-    // if position == highest point:
-    //      return Some(steps from hashmap)
-    // put position in visited set.
-    // filter the up, down, left, right neighbor positions that fill the criteria:
-    //      - neighbor position isn't out of bounds
-    //      - neighbor hasn't been visited
-    //      - neighbor position's height difference with current position is <= 1
-    // for each filtered neighbor:
-    //      - add to BFS queue
-    //      - add to position steps hashmap with steps value = current position + 1
+    q.push_front(starting_point);
+    steps_from_source.insert(starting_point, 0);
+    visited.insert(starting_point);
 
-    todo!()
+    while let Some(current) = q.pop_front() {
+        if current == highest_point {
+            let steps_from_source = *steps_from_source.get(&current).unwrap();
+            return Some(steps_from_source);
+        }
+
+        let current_steps_from_source = *steps_from_source.get(&current).unwrap();
+
+        for neighbor in get_neighbors(&current, heightmap, &visited) {
+            visited.insert(neighbor);
+            q.push_back(neighbor);
+            steps_from_source.insert(neighbor, current_steps_from_source + 1);
+        }
+    }
+    None
+}
+
+fn get_neighbors(
+    current: &Position,
+    heightmap: &HeightMap,
+    visited: &HashSet<Position>,
+) -> Vec<Position> {
+    let Position { row, col } = current;
+
+    let up = Position {
+        row: *row + 1,
+        col: *col,
+    };
+    let down = Position {
+        row: *row - 1,
+        col: *col,
+    };
+    let left = Position {
+        row: *row,
+        col: *col - 1,
+    };
+    let right = Position {
+        row: *row,
+        col: *col + 1,
+    };
+
+    let neighbors = vec![up, down, left, right];
+
+    neighbors
+        .into_iter()
+        .filter(|neighbor| {
+            !heightmap.out_of_bounds(&neighbor)
+                && !visited.contains(&neighbor)
+                && heightmap.height_difference(&current, &neighbor) <= 1
+        })
+        .collect()
 }
 
 fn main() {
@@ -119,7 +158,6 @@ fn main() {
 
     let heightmap: HeightMap = mountain.parse().unwrap();
 
-    todo!();
     let shortest_path_to_highest_point = shortest_path_to_highest_point(&heightmap);
 
     println!(
