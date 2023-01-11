@@ -92,7 +92,6 @@ fn shortest_path_to_highest_point(
     seen_positions: &mut HashMap<Position, Option<usize>>,
 ) -> Option<usize> {
     if current == heightmap.highest_point {
-        println!("Top!");
         return Some(0);
     }
 
@@ -118,25 +117,24 @@ fn shortest_path_to_highest_point(
     let mut neighbor_paths: Vec<Option<usize>> = vec![];
 
     for neighbor in neighbors {
-        // has to do with the height differences
-        // and the seen positions?
+        if seen_positions.contains_key(&neighbor) {
+            let shortest_path_to_highest_point = *seen_positions.get(&neighbor).unwrap();
+            neighbor_paths.push(shortest_path_to_highest_point);
+            continue;
+        }
+
         let mut path = path.clone();
         path.insert(current);
+        let shortest_path_to_highest_point =
+            shortest_path_to_highest_point(path, neighbor, heightmap, seen_positions);
 
-        if seen_positions.contains_key(&neighbor) {
-            neighbor_paths.push(*seen_positions.get(&neighbor).unwrap());
-        } else {
-            let neighbor_shortest_path_to_highest_point =
-                shortest_path_to_highest_point(path, neighbor, heightmap, seen_positions);
-
-            neighbor_paths.push(neighbor_shortest_path_to_highest_point);
-        }
+        neighbor_paths.push(shortest_path_to_highest_point);
     }
 
-    let mut neighbor_paths: Vec<usize> = neighbor_paths
+    let neighbor_paths: Vec<usize> = neighbor_paths
         .into_iter()
-        .filter(|neighbor_path_length| neighbor_path_length.is_some())
-        .map(|neighbor_path_length| neighbor_path_length.unwrap())
+        .filter(|neighbor_path| neighbor_path.is_some())
+        .map(|neighbor_path| neighbor_path.unwrap())
         .collect();
 
     if neighbor_paths.is_empty() {
@@ -144,9 +142,10 @@ fn shortest_path_to_highest_point(
         return None;
     }
 
-    neighbor_paths.sort();
-    seen_positions.insert(current, Some(neighbor_paths[0] + 1));
-    return Some(neighbor_paths[0] + 1);
+    let shortest_neighbor_path = neighbor_paths.iter().min().unwrap();
+
+    seen_positions.insert(current, Some(shortest_neighbor_path + 1));
+    return Some(shortest_neighbor_path + 1);
 }
 
 fn main() {
