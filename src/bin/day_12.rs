@@ -1,15 +1,11 @@
+use std::cell::Cell;
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::fs;
 use std::hash::Hash;
+use std::rc::Rc;
+use std::rc::Weak;
 use std::str::FromStr;
-
-// New Plan: BFS version of shortest path
-// Previous implementation used DFS which is a bit more confusing and requires memoization and recursion
-// BFS version of shortest path is simpler to understand and create.
-// - Create graph of Position nodes that are reachable from source
-// - Do a BFS of graph from source to target
-// - starting and current node is source with steps = 0 from source.
-// - from a curr Node, its non visited neighboring node gets the curr node's steps + 1.
-// - first visit of target is min steps from source to target.
 
 #[derive(Debug, Eq, Hash, PartialEq, Clone, Copy)]
 struct Position {
@@ -50,25 +46,25 @@ impl HeightMap {
 #[derive(Debug)]
 struct HeightMapError;
 
-fn find_letter(letter: char, heightmap: &Vec<Vec<char>>) -> Position {
-    for row in 0..heightmap.len() {
-        for col in 0..heightmap[0].len() {
-            if heightmap[row][col] == letter {
-                return Position {
-                    row: row as i32,
-                    col: col as i32,
-                };
-            }
-        }
-    }
-
-    Position { row: 0, col: 0 }
-}
-
 impl FromStr for HeightMap {
     type Err = HeightMapError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        fn find_letter(letter: char, heightmap: &Vec<Vec<char>>) -> Position {
+            for row in 0..heightmap.len() {
+                for col in 0..heightmap[0].len() {
+                    if heightmap[row][col] == letter {
+                        return Position {
+                            row: row as i32,
+                            col: col as i32,
+                        };
+                    }
+                }
+            }
+
+            Position { row: 0, col: 0 }
+        }
+
         let mut map = Vec::new();
         let lines: Vec<&str> = s.lines().collect();
 
@@ -91,9 +87,29 @@ impl FromStr for HeightMap {
     }
 }
 
-struct Node {}
+fn shortest_path_to_highest_point(heightmap: &HeightMap) -> Option<usize> {
+    // visited positions hashset
+    // <position, steps> hashmap
 
-fn shortest_path_to_highest_point(graph: &Node) -> Option<usize> {
+    // initiate BFS queue
+
+    // starting from the starting point in the heightmap:
+
+    // put the starting point into the queue.
+    // put the starting point into the hashmap with steps = 0.
+
+    // for each position in the queue:
+    // if position == highest point:
+    //      return Some(steps from hashmap)
+    // put position in visited set.
+    // filter the up, down, left, right neighbor positions that fill the criteria:
+    //      - neighbor position isn't out of bounds
+    //      - neighbor hasn't been visited
+    //      - neighbor position's height difference with current position is <= 1
+    // for each filtered neighbor:
+    //      - add to BFS queue
+    //      - add to position steps hashmap with steps value = current position + 1
+
     todo!()
 }
 
@@ -101,10 +117,10 @@ fn main() {
     let file_path_from_src = "./inputs/day_12/input.txt";
     let mountain: String = fs::read_to_string(file_path_from_src).unwrap();
 
-    let mut heightmap: HeightMap = mountain.parse().unwrap();
+    let heightmap: HeightMap = mountain.parse().unwrap();
 
     todo!();
-    let shortest_path_to_highest_point = shortest_path_to_highest_point(&Node {});
+    let shortest_path_to_highest_point = shortest_path_to_highest_point(&heightmap);
 
     println!(
         "shortest path to mountain top: {}",
