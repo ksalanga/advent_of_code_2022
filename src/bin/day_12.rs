@@ -1,9 +1,15 @@
-use std::collections::HashMap;
-use std::collections::HashSet;
 use std::fs;
 use std::hash::Hash;
-use std::io::Write;
 use std::str::FromStr;
+
+// New Plan: BFS version of shortest path
+// Previous implementation used DFS which is a bit more confusing and requires memoization and recursion
+// BFS version of shortest path is simpler to understand and create.
+// - Create graph of Position nodes that are reachable from source
+// - Do a BFS of graph from source to target
+// - starting and current node is source with steps = 0 from source.
+// - from a curr Node, its non visited neighboring node gets the curr node's steps + 1.
+// - first visit of target is min steps from source to target.
 
 #[derive(Debug, Eq, Hash, PartialEq, Clone, Copy)]
 struct Position {
@@ -85,67 +91,10 @@ impl FromStr for HeightMap {
     }
 }
 
-fn shortest_path_to_highest_point(
-    path: HashSet<Position>,
-    current: Position,
-    heightmap: &mut HeightMap,
-    seen_positions: &mut HashMap<Position, Option<usize>>,
-) -> Option<usize> {
-    if current == heightmap.highest_point {
-        return Some(0);
-    }
+struct Node {}
 
-    let r = current.row;
-    let c = current.col;
-
-    let up = Position { row: r + 1, col: c };
-    let down = Position { row: r - 1, col: c };
-    let left = Position { row: r, col: c - 1 };
-    let right = Position { row: r, col: c + 1 };
-
-    let neighbors = vec![up, down, left, right];
-
-    let neighbors: Vec<Position> = neighbors
-        .into_iter()
-        .filter(|neighbor| {
-            !heightmap.out_of_bounds(&neighbor)
-                && !path.contains(&neighbor)
-                && heightmap.height_difference(&current, &neighbor) <= 1
-        })
-        .collect();
-
-    let mut neighbor_paths: Vec<Option<usize>> = vec![];
-
-    for neighbor in neighbors {
-        if seen_positions.contains_key(&neighbor) {
-            let shortest_path_to_highest_point = *seen_positions.get(&neighbor).unwrap();
-            neighbor_paths.push(shortest_path_to_highest_point);
-            continue;
-        }
-
-        let mut path = path.clone();
-        path.insert(current);
-        let shortest_path_to_highest_point =
-            shortest_path_to_highest_point(path, neighbor, heightmap, seen_positions);
-
-        neighbor_paths.push(shortest_path_to_highest_point);
-    }
-
-    let neighbor_paths: Vec<usize> = neighbor_paths
-        .into_iter()
-        .filter(|neighbor_path| neighbor_path.is_some())
-        .map(|neighbor_path| neighbor_path.unwrap())
-        .collect();
-
-    if neighbor_paths.is_empty() {
-        seen_positions.insert(current, None);
-        return None;
-    }
-
-    let shortest_neighbor_path = neighbor_paths.iter().min().unwrap();
-
-    seen_positions.insert(current, Some(shortest_neighbor_path + 1));
-    return Some(shortest_neighbor_path + 1);
+fn shortest_path_to_highest_point(graph: &Node) -> Option<usize> {
+    todo!()
 }
 
 fn main() {
@@ -154,22 +103,8 @@ fn main() {
 
     let mut heightmap: HeightMap = mountain.parse().unwrap();
 
-    let path = HashSet::new();
-
-    let mut seen_positions = HashMap::new();
-
-    let shortest_path_to_highest_point = shortest_path_to_highest_point(
-        path,
-        heightmap.starting_point,
-        &mut heightmap,
-        &mut seen_positions,
-    );
-
-    for seen_position in seen_positions.keys() {
-        heightmap.map[seen_position.row as usize][seen_position.col as usize] = 'X';
-    }
-
-    // write_map_to_file(heightmap.map);
+    todo!();
+    let shortest_path_to_highest_point = shortest_path_to_highest_point(&Node {});
 
     println!(
         "shortest path to mountain top: {}",
@@ -177,124 +112,8 @@ fn main() {
     );
 }
 
-fn write_map_to_file(map: Vec<Vec<char>>) {
-    let mut file = fs::File::create("./outputs/day_12/output.txt").unwrap();
-
-    for row in map {
-        for ch in row {
-            file.write(&[ch as u8]).unwrap();
-        }
-        file.write(&[b'\n']).unwrap();
-    }
-}
-
 #[cfg(test)]
 mod tests {
 
     use super::*;
-    #[test]
-    fn find_shortest_path() {
-        let mountain = "xy\nyE";
-        let mut heightmap: HeightMap = mountain.parse().unwrap();
-
-        let path = HashSet::new();
-
-        let mut seen_positions = HashMap::new();
-
-        let starting_point = Position { row: 0, col: 0 };
-
-        heightmap.map[0][0] = 'x';
-
-        let shortest_path = shortest_path_to_highest_point(
-            path,
-            starting_point,
-            &mut heightmap,
-            &mut seen_positions,
-        );
-        assert_eq!(shortest_path, Some(2));
-    }
-
-    #[test]
-    fn find_shortest_path_going_down_and_up() {
-        //xyxyz
-        //NNNNN
-        let mountain = "xyxyE\nNNNNN";
-        let mut heightmap: HeightMap = mountain.parse().unwrap();
-
-        let path = HashSet::new();
-
-        let mut seen_positions = HashMap::new();
-
-        let starting_point = Position { row: 0, col: 0 };
-
-        heightmap.map[0][0] = 'x';
-
-        let shortest_path = shortest_path_to_highest_point(
-            path,
-            starting_point,
-            &mut heightmap,
-            &mut seen_positions,
-        );
-        assert_eq!(shortest_path, Some(4));
-    }
-
-    #[test]
-    fn find_shortest_path_going_up() {
-        //waabcdefghijklm
-        //xyEyxwvutsrqpon
-        let mountain = "waabcdefghijklm\nxyEyxwvutsrqpon";
-        let mut heightmap: HeightMap = mountain.parse().unwrap();
-
-        let path = HashSet::new();
-
-        let mut seen_positions = HashMap::new();
-
-        let starting_point = Position { row: 0, col: 0 };
-
-        heightmap.map[0][0] = 'w';
-
-        let shortest_path = shortest_path_to_highest_point(
-            path,
-            starting_point,
-            &mut heightmap,
-            &mut seen_positions,
-        );
-        assert_eq!(shortest_path, Some(3));
-    }
-
-    #[test]
-    fn find_shortest_path_sliding_down() {
-        //yaabcdefghijklm
-        //xyEyxwvutsrqpon
-        let mountain = "yaabcdefghijklm\nxyEyxwvutsrqpon";
-        let mut heightmap: HeightMap = mountain.parse().unwrap();
-
-        let path = HashSet::new();
-
-        let mut seen_positions = HashMap::new();
-
-        let starting_point = Position { row: 0, col: 0 };
-
-        heightmap.map[0][0] = 'y';
-
-        let shortest_path = shortest_path_to_highest_point(
-            path,
-            starting_point,
-            &mut heightmap,
-            &mut seen_positions,
-        );
-        assert_eq!(shortest_path, Some(3));
-    }
-
-    #[test]
-    fn map() {
-        let mut map: HashMap<Position, i32> = HashMap::new();
-
-        let p0 = Position { row: 0, col: 0 };
-        let p1 = Position { row: 0, col: 1 };
-        map.insert(p0, 0);
-
-        assert!(!map.contains_key(&p1));
-        assert!(map.contains_key(&p0));
-    }
 }
