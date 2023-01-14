@@ -7,8 +7,14 @@ name = "advent_of_code_2022"
 version = "0.1.0"
 dependencies = [
  "my_tree",
+ "packet-13-22",
 ]
 
 [[package]]
 name = "my_tree"
 version = "0.1.0"
+
+[[package]]
+name = "packet-13-22"
+version = "0.1.0"
+source = "git+https://github.com/ksalanga/packet-13-22#56cc5cefecd9e52a83736347f0a01d2940021201"

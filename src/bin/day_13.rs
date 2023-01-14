@@ -1,18 +1,24 @@
-// we a have a packet that contains a block of: lists of integers, integers, or nothing
-
-// enum PacketDatum:
-// - List(Box<Vec<PacketDatum>>)
-// - Integer(i32)
-
-// [1,1,3,1,1] => Vec<PacketDatum>: [Integer, Integer, Integer...]
-/// [1,1,5,1,1] => Vec<PacketDatum>: [Integer, Integer, Integer...]
-
-// [[1],[2,3,4]] => Vec<PacketDatum>: [List, List]
-// [[1],4] => Vec<PacketDatum>: [List, Integer]
-
-// can only compare lists with lists and integers with integers.
-// if we compare a list with an integer, that integer, needs to become a list.
+use packet_13_22::datum::PacketDatum;
+use std::fs;
 
 fn main() {
-    todo!();
+    let file_path_from_src = "./inputs/day_13/input.txt";
+    let packet_pairs: String = fs::read_to_string(file_path_from_src).unwrap();
+
+    let packet_pairs = packet_pairs.split("\n\r\n");
+
+    let mut right_order: usize = 0;
+
+    for (idx, packet_pair) in packet_pairs.enumerate() {
+        let mut packet_pair = packet_pair.lines();
+
+        let packet_1: PacketDatum = packet_pair.next().unwrap().parse().unwrap();
+        let packet_2: PacketDatum = packet_pair.next().unwrap().parse().unwrap();
+
+        if packet_1 < packet_2 {
+            right_order += idx + 1;
+        }
+    }
+
+    println!("Right order pairs: {}", right_order);
 }
