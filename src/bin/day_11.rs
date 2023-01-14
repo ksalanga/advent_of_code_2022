@@ -168,6 +168,7 @@ impl FromStr for Monkey {
 }
 
 impl Monkey {
+    #[allow(dead_code)]
     fn new_dummy(friends: &Rc<RefCell<Vec<RefCell<Monkey>>>>) -> Monkey {
         let item = Item { worry_level: 1 };
         let items = vec![item];
@@ -247,7 +248,7 @@ fn spawn_monkeys() -> Rc<RefCell<Vec<RefCell<Monkey>>>> {
 fn main() {
     let monkeys = spawn_monkeys();
 
-    for round in 0..20 {
+    for _round in 0..20 {
         for monkey in monkeys.borrow().iter() {
             monkey.borrow_mut().inspect_and_throw_all_items();
         }
