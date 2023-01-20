@@ -31,7 +31,35 @@ impl Cave {
 
         // TODO: Place rocks into cave given rock paths
 
-        Cave { vertical_map }
+        // transform the rock coordinates into 2d vector coordinates
+        let rock_paths_points_map_coordinates: Vec<Vec<Coordinates>> = rock_paths_points
+            .iter()
+            .map(|rock_path_points| {
+                rock_path_points
+                    .iter()
+                    .map(|coordinate| Coordinates {
+                        x: coordinate.x - smallest_x,
+                        y: coordinate.y,
+                    })
+                    .collect()
+            })
+            .collect();
+
+        // transform rock paths which consists of line endpoint map coordinates into the entire points of the line
+        // we're basically "drawing the line" given our rock path line endpoints
+        let rock_map_coordinates: Vec<Coordinates> = rock_paths_points_map_coordinates
+            .into_iter()
+            .map(|rock_path_points| Self::draw_rock_path_lines(rock_path_points))
+            .flatten()
+            .collect();
+
+        for Coordinates { x, y } in rock_map_coordinates {
+            // map column = x coordinate - smallest x coordinate
+            // map row = y coordinate
+            map[y as usize][x as usize] = Element::Rock;
+        }
+
+        Cave { map }
     }
 
     fn y_len(&self) -> i32 {
