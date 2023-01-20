@@ -29,6 +29,7 @@ impl Cave {
 
         let vertical_map = vec![vec![Element::Air; x_len as usize]; y_len as usize];
 
+        // TODO: Place rocks into cave given rock paths
 
         Cave { vertical_map }
     }
@@ -104,3 +105,8 @@ mod tests {
         assert_eq!(cave.y_len(), 10);
     }
 
+    #[test]
+    fn rocks_placed_in_cave() {
+        todo!()
+    }
+}
