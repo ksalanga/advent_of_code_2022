@@ -62,6 +62,11 @@ impl Cave {
         Cave { map }
     }
 
+    fn draw_rock_path_lines(rock_path_line_endpoints: Vec<Coordinates>) -> Vec<Coordinates> {
+        todo!()
+        // given each endpoint, create the line of coordinates
+    }
+
     fn y_len(&self) -> i32 {
         self.vertical_map.len() as i32
     }
