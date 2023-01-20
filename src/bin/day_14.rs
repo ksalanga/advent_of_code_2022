@@ -27,7 +27,11 @@ impl Cave {
         let largest_y = rock_coords.get(rock_coords.len() - 1).unwrap().y;
         let y_len = largest_y + 1;
 
-        let vertical_map = vec![vec![Element::Air; x_len as usize]; y_len as usize];
+
+        let starting_sand_coords = Coordinates {
+            x: 500 - smallest_x,
+            y: 0,
+        };
 
         // TODO: Place rocks into cave given rock paths
 
