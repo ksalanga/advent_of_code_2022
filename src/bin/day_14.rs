@@ -6,12 +6,12 @@ enum Element {
 }
 
 struct Cave {
-    vertical_map: Vec<Vec<Element>>,
+    map: Vec<Vec<Element>>,
 }
 
 impl Cave {
-    fn new(rock_paths: Vec<Vec<Coordinates>>) -> Cave {
-        let mut rock_coords: Vec<Coordinates> = rock_paths
+    fn new(rock_paths_line_endpoints: Vec<Vec<Coordinates>>) -> Cave {
+        let mut rock_coords: Vec<Coordinates> = rock_paths_line_endpoints
             .clone()
             .into_iter()
             .flatten()
@@ -27,6 +27,7 @@ impl Cave {
         let largest_y = rock_coords.get(rock_coords.len() - 1).unwrap().y;
         let y_len = largest_y + 1;
 
+        let mut map = vec![vec![Element::Air; x_len as usize]; y_len as usize];
 
         let starting_sand_coords = Coordinates {
             x: 500 - smallest_x,
@@ -35,8 +36,8 @@ impl Cave {
 
         // TODO: Place rocks into cave given rock paths
 
-        // transform the rock coordinates into 2d vector coordinates
-        let rock_paths_points_map_coordinates: Vec<Vec<Coordinates>> = rock_paths_points
+        // transform the rock paths' line endpoint coordinates into 2d vector coordinates
+        let rock_paths_points_map_coordinates: Vec<Vec<Coordinates>> = rock_paths_line_endpoints
             .iter()
             .map(|rock_path_points| {
                 rock_path_points
@@ -72,11 +73,11 @@ impl Cave {
     }
 
     fn y_len(&self) -> i32 {
-        self.vertical_map.len() as i32
+        self.map.len() as i32
     }
 
     fn x_len(&self) -> i32 {
-        self.vertical_map[0].len() as i32
+        self.map[0].len() as i32
     }
 }
 
