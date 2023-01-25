@@ -68,8 +68,53 @@ impl Cave {
     }
 
     fn draw_rock_path_lines(rock_path_line_endpoints: Vec<Coordinates>) -> Vec<Coordinates> {
-        todo!()
-        // given each endpoint, create the line of coordinates
+        // given each line endpoint, create the line of coordinates
+        let mut line_coordinates = vec![];
+
+        let mut rock_path_line_endpoints = rock_path_line_endpoints.iter().peekable();
+
+        while let Some(endpoint_1) = rock_path_line_endpoints.next() {
+            if let Some(endpoint_2) = rock_path_line_endpoints.peek() {
+                line_coordinates.append(&mut Self::get_line_coordinates(&endpoint_1, &endpoint_2));
+            } else {
+                break;
+            }
+        }
+
+        line_coordinates
+    }
+
+    fn get_line_coordinates(
+        endpoint_1: &Coordinates,
+        endpoint_2: &Coordinates,
+    ) -> Vec<Coordinates> {
+        let mut line_endpoints: Vec<Coordinates> = vec![endpoint_1.clone(), endpoint_2.clone()];
+
+        if endpoint_1.x == endpoint_2.x {
+            // vertical line
+            line_endpoints.sort_by(|a, b| a.y.cmp(&b.y));
+
+            let x = line_endpoints[0].x;
+            let lowest_y = line_endpoints[0].y;
+            let highest_y = line_endpoints[1].y;
+
+            for y in lowest_y + 1..highest_y {
+                line_endpoints.push(Coordinates { x, y });
+            }
+        } else {
+            // horizontal line
+            line_endpoints.sort_by(|a, b| a.x.cmp(&b.x));
+
+            let y = line_endpoints[0].y;
+            let lowest_x = line_endpoints[0].x;
+            let highest_x = line_endpoints[1].x;
+
+            for x in lowest_x + 1..highest_x {
+                line_endpoints.push(Coordinates { x, y });
+            }
+        }
+
+        line_endpoints
     }
 
     fn y_len(&self) -> i32 {
@@ -145,6 +190,41 @@ mod tests {
 
     #[test]
     fn rocks_placed_in_cave() {
-        todo!()
+        let mut expected_cave_map = vec![vec![Element::Air; 10]; 10];
+
+        for col in 2..5 {
+            expected_cave_map[6][col] = Element::Rock;
+        }
+
+        for row in 4..7 {
+            expected_cave_map[row][4] = Element::Rock;
+        }
+
+        expected_cave_map[4][9] = Element::Rock;
+
+        for row in 4..10 {
+            expected_cave_map[row][8] = Element::Rock;
+        }
+
+        for col in 0..9 {
+            expected_cave_map[9][col] = Element::Rock;
+        }
+
+        let rock_path_1 = vec![
+            coords::new(498, 4),
+            coords::new(498, 6),
+            coords::new(496, 6),
+        ];
+        let rock_path_2 = vec![
+            coords::new(503, 4),
+            coords::new(502, 4),
+            coords::new(502, 9),
+            coords::new(494, 9),
+        ];
+
+        let rock_paths = vec![rock_path_1, rock_path_2];
+        let cave = Cave::new(rock_paths);
+
+        assert!(cave.map == expected_cave_map);
     }
 }
