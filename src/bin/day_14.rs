@@ -1,4 +1,4 @@
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 enum Element {
     Air,
     Rock,
@@ -130,7 +130,7 @@ impl Cave {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, PartialEq)]
 struct Coordinates {
     x: i32,
     y: i32,
