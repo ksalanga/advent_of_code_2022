@@ -6,6 +6,7 @@ enum Element {
 }
 
 struct Cave {
+    starting_sand_map_coords: Coordinates,
     map: Vec<Vec<Element>>,
 }
 
@@ -30,8 +31,8 @@ impl Cave {
         let mut map = vec![vec![Element::Air; x_len as usize]; y_len as usize];
 
         let starting_sand_coords = Coordinates {
-            x: 500 - smallest_x,
-            y: 0,
+            x: 0,
+            y: 500 - smallest_x,
         };
 
         // TODO: Place rocks into cave given rock paths
@@ -64,7 +65,10 @@ impl Cave {
             map[y as usize][x as usize] = Element::Rock;
         }
 
-        Cave { map }
+        Cave {
+            starting_sand_map_coords: starting_sand_coords,
+            map,
+        }
     }
 
     fn draw_rock_path_lines(rock_path_line_endpoints: Vec<Coordinates>) -> Vec<Coordinates> {
@@ -186,6 +190,26 @@ mod tests {
 
         assert_eq!(cave.x_len(), 9);
         assert_eq!(cave.y_len(), 10);
+    }
+
+    #[test]
+    fn starting_sand_map_coords() {
+        let rock_path_1 = vec![
+            coords::new(498, 4),
+            coords::new(498, 6),
+            coords::new(496, 6),
+        ];
+        let rock_path_2 = vec![
+            coords::new(503, 4),
+            coords::new(502, 4),
+            coords::new(502, 9),
+            coords::new(494, 9),
+        ];
+
+        let rock_paths = vec![rock_path_1, rock_path_2];
+        let cave = Cave::new(rock_paths);
+
+        assert!(cave.starting_sand_map_coords == Coordinates { x: 0, y: 6 });
     }
 
     #[test]
