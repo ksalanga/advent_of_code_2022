@@ -1,3 +1,5 @@
+use std::result::Result;
+
 #[derive(Clone, Copy, PartialEq)]
 enum Element {
     Air,
@@ -9,6 +11,8 @@ struct Cave {
     starting_sand_map_coords: Coordinates,
     map: Vec<Vec<Element>>,
 }
+
+struct InfiniteFall {}
 
 impl Cave {
     fn new(rock_paths_line_endpoints: Vec<Vec<Coordinates>>) -> Cave {
@@ -68,6 +72,69 @@ impl Cave {
         Cave {
             starting_sand_map_coords: starting_sand_coords,
             map,
+        }
+    }
+
+    fn out_of_bounds(&self, coords: &Coordinates) -> bool {
+        let Coordinates { x: row, y: col } = *coords;
+
+        row < 0 || row >= self.map.len() as i32 || col < 0 || col >= self.map[0].len() as i32
+    }
+
+    fn fall(&self, sand_coords: &Coordinates) -> Result<Coordinates, InfiniteFall> {
+        let Coordinates { x, y } = sand_coords;
+
+        let element_below = Coordinates { x: *x + 1, y: *y };
+
+        if self.out_of_bounds(&element_below) {
+            return Err(InfiniteFall {});
+        }
+
+        match self.map[element_below.x as usize][element_below.y as usize] {
+            Element::Air => return self.fall(&element_below),
+            _rock => {
+                let mut bottom_left_element = Coordinates {
+                    x: element_below.x,
+                    y: element_below.y - 1,
+                };
+
+                if self.out_of_bounds(&bottom_left_element) {
+                    return Err(InfiniteFall {});
+                }
+
+                if self.map[bottom_left_element.x as usize][bottom_left_element.y as usize]
+                    == Element::Air
+                {
+                    return self.fall(&mut bottom_left_element);
+                }
+
+                let mut bottom_right_element = Coordinates {
+                    x: element_below.x,
+                    y: element_below.y + 1,
+                };
+
+                if self.out_of_bounds(&bottom_right_element) {
+                    return Err(InfiniteFall {});
+                }
+
+                if self.map[bottom_right_element.x as usize][bottom_right_element.y as usize]
+                    == Element::Air
+                {
+                    return self.fall(&mut bottom_right_element);
+                }
+
+                return Ok(sand_coords.clone());
+            }
+        }
+    }
+
+    fn drop_sand(&mut self) -> Result<(), InfiniteFall> {
+        match self.fall(&self.starting_sand_map_coords) {
+            Ok(coords) => {
+                self.map[coords.x as usize][coords.y as usize] = Element::Sand;
+                return Ok(());
+            }
+            _ => return Err(InfiniteFall {}),
         }
     }
 
@@ -250,5 +317,77 @@ mod tests {
         let cave = Cave::new(rock_paths);
 
         assert!(cave.map == expected_cave_map);
+    }
+
+    #[test]
+    fn drop_one_sand() {
+        let rock_path_1 = vec![
+            coords::new(498, 4),
+            coords::new(498, 6),
+            coords::new(496, 6),
+        ];
+        let rock_path_2 = vec![
+            coords::new(503, 4),
+            coords::new(502, 4),
+            coords::new(502, 9),
+            coords::new(494, 9),
+        ];
+
+        let rock_paths = vec![rock_path_1, rock_path_2];
+        let mut cave = Cave::new(rock_paths);
+
+        cave.drop_sand();
+
+        assert!(cave.map[8][6] == Element::Sand);
+    }
+
+    #[test]
+    fn drop_sand_left() {
+        let rock_path_1 = vec![
+            coords::new(498, 4),
+            coords::new(498, 6),
+            coords::new(496, 6),
+        ];
+        let rock_path_2 = vec![
+            coords::new(503, 4),
+            coords::new(502, 4),
+            coords::new(502, 9),
+            coords::new(494, 9),
+        ];
+
+        let rock_paths = vec![rock_path_1, rock_path_2];
+        let mut cave = Cave::new(rock_paths);
+
+        cave.drop_sand();
+        cave.drop_sand();
+
+        assert!(cave.map[8][6] == Element::Sand);
+        assert!(cave.map[8][5] == Element::Sand);
+    }
+
+    #[test]
+    fn drop_sand_right() {
+        let rock_path_1 = vec![
+            coords::new(498, 4),
+            coords::new(498, 6),
+            coords::new(496, 6),
+        ];
+        let rock_path_2 = vec![
+            coords::new(503, 4),
+            coords::new(502, 4),
+            coords::new(502, 9),
+            coords::new(494, 9),
+        ];
+
+        let rock_paths = vec![rock_path_1, rock_path_2];
+        let mut cave = Cave::new(rock_paths);
+
+        cave.drop_sand();
+        cave.drop_sand();
+        cave.drop_sand();
+
+        assert!(cave.map[8][6] == Element::Sand);
+        assert!(cave.map[8][5] == Element::Sand);
+        assert!(cave.map[8][7] == Element::Sand);
     }
 }
