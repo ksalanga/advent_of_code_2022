@@ -188,6 +188,14 @@ impl Cave {
         line_endpoints
     }
 
+    fn sand_count(&self) -> usize {
+        self.map
+            .iter()
+            .flatten()
+            .filter(|element| **element == Element::Sand)
+            .count()
+    }
+
     fn y_len(&self) -> i32 {
         self.map.len() as i32
     }
@@ -389,5 +397,51 @@ mod tests {
         assert!(cave.map[8][6] == Element::Sand);
         assert!(cave.map[8][5] == Element::Sand);
         assert!(cave.map[8][7] == Element::Sand);
+    }
+
+    #[test]
+    fn sand_count() {
+        let rock_path_1 = vec![
+            coords::new(498, 4),
+            coords::new(498, 6),
+            coords::new(496, 6),
+        ];
+        let rock_path_2 = vec![
+            coords::new(503, 4),
+            coords::new(502, 4),
+            coords::new(502, 9),
+            coords::new(494, 9),
+        ];
+
+        let rock_paths = vec![rock_path_1, rock_path_2];
+        let mut cave = Cave::new(rock_paths);
+
+        cave.drop_sand();
+        cave.drop_sand();
+        cave.drop_sand();
+
+        assert!(cave.sand_count() == 3);
+    }
+
+    #[test]
+    fn aoc_example_sand_count() {
+        let rock_path_1 = vec![
+            coords::new(498, 4),
+            coords::new(498, 6),
+            coords::new(496, 6),
+        ];
+        let rock_path_2 = vec![
+            coords::new(503, 4),
+            coords::new(502, 4),
+            coords::new(502, 9),
+            coords::new(494, 9),
+        ];
+
+        let rock_paths = vec![rock_path_1, rock_path_2];
+        let mut cave = Cave::new(rock_paths);
+
+        while let Ok(()) = cave.drop_sand() {}
+
+        assert!(cave.sand_count() == 24);
     }
 }
