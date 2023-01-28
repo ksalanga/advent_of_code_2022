@@ -1,4 +1,7 @@
+use std::fmt;
+use std::num::ParseIntError;
 use std::result::Result;
+use std::str::FromStr;
 
 #[derive(Clone, Copy, PartialEq)]
 enum Element {
@@ -214,6 +217,37 @@ struct Coordinates {
 impl Coordinates {
     fn new(x: i32, y: i32) -> Coordinates {
         Coordinates { x, y }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+struct CoordinatesParseError;
+
+impl fmt::Display for CoordinatesParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "coordinate parsing error")
+    }
+}
+
+impl std::convert::From<ParseIntError> for CoordinatesParseError {
+    fn from(_: ParseIntError) -> Self {
+        Self
+    }
+}
+
+impl FromStr for Coordinates {
+    type Err = CoordinatesParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut s = s.split(",");
+
+        let x = s.next().ok_or(CoordinatesParseError)?;
+        let x: i32 = x.parse()?;
+
+        let y = s.next().ok_or(CoordinatesParseError)?;
+        let y: i32 = y.parse()?;
+
+        Ok(Coordinates { x, y })
     }
 }
 
@@ -443,5 +477,14 @@ mod tests {
         while let Ok(()) = cave.drop_sand() {}
 
         assert!(cave.sand_count() == 24);
+    }
+
+    #[test]
+    fn parse_coordinate() {
+        let coord_str = "498,3";
+
+        let coord = coord_str.parse::<Coordinates>();
+
+        assert!(coord == Ok(Coordinates { x: 498, y: 3 }));
     }
 }
