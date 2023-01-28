@@ -1,4 +1,5 @@
 use std::fmt;
+use std::fs;
 use std::num::ParseIntError;
 use std::result::Result;
 use std::str::FromStr;
@@ -199,10 +200,12 @@ impl Cave {
             .count()
     }
 
+    #[allow(dead_code)]
     fn y_len(&self) -> i32 {
         self.map.len() as i32
     }
 
+    #[allow(dead_code)]
     fn x_len(&self) -> i32 {
         self.map[0].len() as i32
     }
@@ -215,6 +218,7 @@ struct Coordinates {
 }
 
 impl Coordinates {
+    #[allow(dead_code)]
     fn new(x: i32, y: i32) -> Coordinates {
         Coordinates { x, y }
     }
@@ -252,7 +256,24 @@ impl FromStr for Coordinates {
 }
 
 fn main() {
-    todo!();
+    let file_path_from_src = "./inputs/day_14/input.txt";
+    let input: String = fs::read_to_string(file_path_from_src).unwrap();
+    let mut rock_paths = vec![];
+
+    for rock_path in input.lines() {
+        let rock_path: Vec<Coordinates> = rock_path
+            .split(" -> ")
+            .map(|coord| coord.parse::<Coordinates>().unwrap())
+            .collect();
+
+        rock_paths.push(rock_path);
+    }
+
+    let mut cave = Cave::new(rock_paths);
+
+    while let Ok(()) = cave.drop_sand() {}
+
+    println!("Sand count: {}", cave.sand_count());
 }
 
 #[cfg(test)]
